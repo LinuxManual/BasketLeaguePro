@@ -40,3 +40,15 @@ All devices opening that deployed page will see the same shared data from Fireba
 - Chat clear/reset is protected with admin password.
 - Current password: `HotHeroes2026!`
 - You can change it in `index.html` via `window.CHAT_RESET_PASSWORD`.
+
+
+## Chat username lock & admin commands
+- Each user can chat with one username per browser: username locks on first message and cannot be changed afterwards.
+- Admin account configured:
+  - username: `REDKNIGHT`
+  - code: `1964`
+- Admin commands in chat panel:
+  - `/ban USERNAME`
+  - `/unban USERNAME`
+  - `/clear`
+- Chat reset button still requires reset password: `HotHeroes2026!`

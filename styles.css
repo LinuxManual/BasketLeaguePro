@@ -389,6 +389,14 @@ textarea {
   font-size: 0.92rem;
 }
 
+.chat-tip.ok {
+  color: var(--ok);
+}
+
+.chat-tip.error {
+  color: #ff7878;
+}
+
 .chat-messages {
   list-style: none;
   margin: 0;

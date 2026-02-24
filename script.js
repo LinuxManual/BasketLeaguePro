@@ -15,10 +15,13 @@ import {
   arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+const LOCKED_USERNAME_KEY = "basketleaguepro-locked-username";
+
 const state = {
   rosters: { HotHeroes: [], "Ιπτάμενοι": [] },
   matches: [],
-  messages: []
+  messages: [],
+  moderation: { bannedUsers: [] }
 };
 
 const playerForm = document.getElementById("player-form");
@@ -29,16 +32,51 @@ const iptamenoiList = document.getElementById("iptamenoi-list");
 const matchesBody = document.getElementById("matches-body");
 const matchSelect = document.getElementById("match-select");
 const chatForm = document.getElementById("chat-form");
+const usernameInput = document.getElementById("username");
+const messageInput = document.getElementById("message");
 const chatMessages = document.getElementById("chat-messages");
 const clearButton = document.getElementById("clear-chat");
 const connectionStatus = document.getElementById("connection-status");
+const adminLoginForm = document.getElementById("admin-login-form");
+const adminCommandForm = document.getElementById("admin-command-form");
+const adminStatus = document.getElementById("admin-status");
 
 const CHAT_RESET_PASSWORD = window.CHAT_RESET_PASSWORD || "HotHeroes2026!";
+const CHAT_ADMIN = window.CHAT_ADMIN || { username: "REDKNIGHT", code: "1964" };
+
+let isAdmin = false;
 
 function setStatus(text, ok = true) {
   connectionStatus.textContent = text;
   connectionStatus.classList.toggle("ok", ok);
   connectionStatus.classList.toggle("error", !ok);
+}
+
+function setAdminStatus(text, ok = true) {
+  adminStatus.textContent = text;
+  adminStatus.classList.toggle("ok", ok);
+  adminStatus.classList.toggle("error", !ok);
+}
+
+function getLockedUsername() {
+  return localStorage.getItem(LOCKED_USERNAME_KEY) || "";
+}
+
+function lockUsername(name) {
+  localStorage.setItem(LOCKED_USERNAME_KEY, name);
+  usernameInput.value = name;
+  usernameInput.readOnly = true;
+}
+
+function hydrateLockedUsername() {
+  const locked = getLockedUsername();
+  if (!locked) return;
+  usernameInput.value = locked;
+  usernameInput.readOnly = true;
+}
+
+function currentUsername() {
+  return usernameInput.value.trim();
 }
 
 const firebaseConfig = window.FIREBASE_CONFIG;
@@ -54,6 +92,7 @@ analyticsSupported().then((ok) => {
 
 const db = getFirestore(app);
 const rostersRef = doc(db, "basketLeaguePro", "rosters");
+const moderationRef = doc(db, "basketLeaguePro", "moderation");
 const matchesRef = collection(db, "basketLeaguePro", "matches", "items");
 const messagesRef = collection(db, "basketLeaguePro", "messages", "items");
 
@@ -159,10 +198,10 @@ function renderAll() {
   renderMessages(orderedMessages);
 }
 
-let listenersReady = { rosters: false, matches: false, messages: false };
+let listenersReady = { rosters: false, matches: false, messages: false, moderation: false };
 function markReady(key) {
   listenersReady[key] = true;
-  if (listenersReady.rosters && listenersReady.matches && listenersReady.messages) {
+  if (Object.values(listenersReady).every(Boolean)) {
     setStatus("Συνδεδεμένο με Firebase ✅", true);
   }
 }
@@ -176,6 +215,16 @@ onSnapshot(rostersRef, (snap) => {
   markReady("rosters");
   renderAll();
 }, (error) => setStatus(`Firebase rosters error ❌ (${error.message})`, false));
+
+onSnapshot(moderationRef, (snap) => {
+  const data = snap.data() || {};
+  state.moderation = { bannedUsers: Array.isArray(data.bannedUsers) ? data.bannedUsers : [] };
+  const me = currentUsername();
+  if (me && state.moderation.bannedUsers.includes(me)) {
+    setStatus("Ο λογαριασμός σου έχει γίνει ban από το chat ❌", false);
+  }
+  markReady("moderation");
+}, (error) => setStatus(`Firebase moderation error ❌ (${error.message})`, false));
 
 onSnapshot(matchesRef, (snap) => {
   state.matches = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -224,12 +273,24 @@ scoreForm.addEventListener("submit", async (event) => {
 
 chatForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const user = document.getElementById("username").value.trim();
-  const text = document.getElementById("message").value.trim();
+  let user = currentUsername();
+  const text = messageInput.value.trim();
   if (!user || !text) return;
 
+  const locked = getLockedUsername();
+  if (!locked) {
+    lockUsername(user);
+  } else {
+    user = locked;
+  }
+
+  if (state.moderation.bannedUsers.includes(user)) {
+    setStatus("Είσαι ban από το chat και δεν μπορείς να στείλεις μήνυμα ❌", false);
+    return;
+  }
+
   await addDoc(messagesRef, { user, text, createdAt: Date.now() });
-  document.getElementById("message").value = "";
+  messageInput.value = "";
 });
 
 clearButton.addEventListener("click", async () => {
@@ -250,3 +311,57 @@ clearButton.addEventListener("click", async () => {
   await batch.commit();
   setStatus("Το chat καθαρίστηκε επιτυχώς ✅", true);
 });
+
+adminLoginForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const adminUser = document.getElementById("admin-username").value.trim();
+  const adminCode = document.getElementById("admin-code").value.trim();
+
+  if (adminUser === CHAT_ADMIN.username && adminCode === CHAT_ADMIN.code) {
+    isAdmin = true;
+    setAdminStatus("Admin login επιτυχές ✅", true);
+    return;
+  }
+
+  isAdmin = false;
+  setAdminStatus("Admin login αποτυχία ❌", false);
+});
+
+adminCommandForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!isAdmin) {
+    setAdminStatus("Πρώτα κάνε admin login ❌", false);
+    return;
+  }
+
+  const commandInput = document.getElementById("admin-command");
+  const raw = commandInput.value.trim();
+  if (!raw) return;
+
+  const [command, ...rest] = raw.split(/\s+/);
+  const target = rest.join(" ").trim();
+  const banned = [...state.moderation.bannedUsers];
+
+  if (command === "/ban" && target) {
+    if (!banned.includes(target)) banned.push(target);
+    await setDoc(moderationRef, { bannedUsers: banned }, { merge: true });
+    setAdminStatus(`User ${target} έγινε ban ✅`, true);
+  } else if (command === "/unban" && target) {
+    const next = banned.filter((name) => name !== target);
+    await setDoc(moderationRef, { bannedUsers: next }, { merge: true });
+    setAdminStatus(`User ${target} έγινε unban ✅`, true);
+  } else if (command === "/clear") {
+    const snap = await getDocs(messagesRef);
+    const batch = writeBatch(db);
+    snap.forEach((item) => batch.delete(item.ref));
+    await batch.commit();
+    setAdminStatus("Το chat καθαρίστηκε με admin command ✅", true);
+  } else {
+    setAdminStatus("Άγνωστη εντολή. Χρησιμοποίησε /ban USER, /unban USER, /clear ❌", false);
+  }
+
+  commandInput.value = "";
+});
+
+hydrateLockedUsername();
+setAdminStatus("Admin commands: /ban USER, /unban USER, /clear", true);
