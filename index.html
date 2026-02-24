@@ -6,10 +6,7 @@
     <title>Basket Clash | HotHeroes vs Ιπτάμενοι</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -35,7 +32,7 @@
         <div class="versus">
           <p class="league">Basket League Pro</p>
           <h1>HotHeroes <span>vs</span> Ιπτάμενοι</h1>
-          <p class="subtitle">Όλα τα δεδομένα αγώνων και ομάδων περνάνε από εσένα.</p>
+          <p class="subtitle">Τα δεδομένα αποθηκεύονται πλέον στο Cloud και είναι προσβάσιμα από παντού.</p>
           <a class="btn-primary" href="#management">Πρόσθεσε μέλη & αγώνες</a>
         </div>
 
@@ -52,10 +49,7 @@
       <section class="section container" id="about">
         <div class="section-heading">
           <h2>Η πλατφόρμα των δύο ομάδων</h2>
-          <p>
-            Εδώ μπορείς να ορίσεις εσύ τη σύνθεση των ομάδων, να δημιουργήσεις αγώνες, να βάλεις
-            τα σκορ όταν ολοκληρωθούν και όλα να αποθηκεύονται τοπικά στον browser.
-          </p>
+          <p>Διαχείριση συνθέσεων, αγώνων και live chat με αυτόματο συγχρονισμό μεταξύ συσκευών.</p>
         </div>
       </section>
 
@@ -64,15 +58,13 @@
           <article class="panel-card">
             <h3>Προσθήκη μέλους</h3>
             <form id="player-form" class="stack-form">
-              <label>
-                Ομάδα
+              <label>Ομάδα
                 <select id="team-select" required>
                   <option value="HotHeroes">HotHeroes</option>
                   <option value="Ιπτάμενοι">Ιπτάμενοι</option>
                 </select>
               </label>
-              <label>
-                Όνομα μέλους
+              <label>Όνομα μέλους
                 <input id="player-name" type="text" maxlength="40" required placeholder="π.χ. Γιάννης Π." />
               </label>
               <button class="btn-primary" type="submit">Προσθήκη</button>
@@ -82,18 +74,9 @@
           <article class="panel-card">
             <h3>Νέος αγώνας</h3>
             <form id="match-form" class="stack-form">
-              <label>
-                Ημερομηνία
-                <input id="match-date" type="date" required />
-              </label>
-              <label>
-                Ώρα
-                <input id="match-time" type="time" required />
-              </label>
-              <label>
-                Γήπεδο
-                <input id="match-court" type="text" maxlength="50" required placeholder="π.χ. Κλειστό Νέας Πόλης" />
-              </label>
+              <label>Ημερομηνία <input id="match-date" type="date" required /></label>
+              <label>Ώρα <input id="match-time" type="time" required /></label>
+              <label>Γήπεδο <input id="match-court" type="text" maxlength="50" required placeholder="π.χ. Κλειστό Νέας Πόλης" /></label>
               <button class="btn-primary" type="submit">Δημιουργία αγώνα</button>
             </form>
           </article>
@@ -101,18 +84,9 @@
           <article class="panel-card">
             <h3>Καταχώρηση σκορ</h3>
             <form id="score-form" class="stack-form">
-              <label>
-                Αγώνας
-                <select id="match-select" required></select>
-              </label>
-              <label>
-                HotHeroes
-                <input id="score-hot" type="number" min="0" required />
-              </label>
-              <label>
-                Ιπτάμενοι
-                <input id="score-fly" type="number" min="0" required />
-              </label>
+              <label>Αγώνας <select id="match-select" required></select></label>
+              <label>HotHeroes <input id="score-hot" type="number" min="0" required /></label>
+              <label>Ιπτάμενοι <input id="score-fly" type="number" min="0" required /></label>
               <button class="btn-primary" type="submit">Αποθήκευση σκορ</button>
             </form>
           </article>
@@ -123,18 +97,13 @@
         <div class="container">
           <div class="section-heading">
             <h2>Πρόγραμμα Αγώνων</h2>
-            <p>Οι αγώνες που δημιουργείς και τα σκορ τους αποθηκεύονται αυτόματα.</p>
+            <p>Όλοι οι αγώνες και τα σκορ ενημερώνονται σε πραγματικό χρόνο.</p>
           </div>
           <div class="schedule-table-wrapper">
             <table class="schedule-table">
               <thead>
                 <tr>
-                  <th>Ημερομηνία</th>
-                  <th>Ώρα</th>
-                  <th>Γήπεδο</th>
-                  <th>Matchup</th>
-                  <th>Σκορ</th>
-                  <th>Κατάσταση</th>
+                  <th>Ημερομηνία</th><th>Ώρα</th><th>Γήπεδο</th><th>Matchup</th><th>Σκορ</th><th>Κατάσταση</th>
                 </tr>
               </thead>
               <tbody id="matches-body"></tbody>
@@ -147,32 +116,21 @@
         <div class="container chat-layout">
           <div>
             <div class="section-heading left-align">
-              <h2>Fan Zone Chat</h2>
-              <p>
-                Γράψε μήνυμα ως φίλαθλος και δες το να αποθηκεύεται τοπικά στον browser για να
-                παραμένει διαθέσιμο στις επόμενες επισκέψεις.
-              </p>
+              <h2>Fan Zone Live Chat</h2>
+              <p>Στείλε το μήνυμά σου και δες το να εμφανίζεται αμέσως σε όλους τους χρήστες.</p>
             </div>
-
             <form id="chat-form" class="chat-form">
-              <label>
-                Όνομα
-                <input type="text" id="username" placeholder="π.χ. Giorgos23" required maxlength="24" />
-              </label>
-              <label>
-                Μήνυμα
-                <textarea id="message" rows="4" placeholder="Γράψε την άποψή σου για τον αγώνα..." required maxlength="280"></textarea>
-              </label>
+              <label>Όνομα <input type="text" id="username" placeholder="π.χ. Giorgos23" required maxlength="24" /></label>
+              <label>Μήνυμα <textarea id="message" rows="4" placeholder="Γράψε το μήνυμά σου..." required maxlength="280"></textarea></label>
               <div class="chat-actions">
                 <button type="submit" class="btn-primary">Αποστολή</button>
                 <button type="button" id="clear-chat" class="btn-secondary">Καθαρισμός Chat</button>
               </div>
             </form>
           </div>
-
           <aside class="chat-panel">
             <h3>Live μηνύματα</h3>
-            <p class="chat-tip">Τα μηνύματα αποθηκεύονται στο Local Storage του browser.</p>
+            <p class="chat-tip">Τα μηνύματα συγχρονίζονται μέσω Cloud Firestore.</p>
             <ul id="chat-messages" class="chat-messages"></ul>
           </aside>
         </div>
@@ -186,6 +144,8 @@
       </div>
     </footer>
 
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
