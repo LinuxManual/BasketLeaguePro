@@ -20,6 +20,7 @@
           <a href="#about">Σχετικά</a>
           <a href="#management">Διαχείριση</a>
           <a href="#schedule">Αγώνες</a>
+          <a href="#insights">Insights</a>
           <a href="#chat">Chat</a>
         </div>
       </nav>
@@ -148,6 +149,35 @@
         </div>
       </section>
 
+
+
+      <section class="section section-alt" id="insights">
+        <div class="container">
+          <div class="section-heading">
+            <h2>Game Insights</h2>
+            <p>Ζωντανή ανάλυση από τα δεδομένα που καταχωρεί η κοινότητα.</p>
+          </div>
+          <div class="insights-grid">
+            <article class="panel-card">
+              <h3>Συνολικοί αγώνες</h3>
+              <p id="ins-total" class="insight-value">0</p>
+            </article>
+            <article class="panel-card">
+              <h3>HotHeroes νίκες</h3>
+              <p id="ins-hot-wins" class="insight-value">0</p>
+            </article>
+            <article class="panel-card">
+              <h3>Ιπτάμενοι νίκες</h3>
+              <p id="ins-fly-wins" class="insight-value">0</p>
+            </article>
+            <article class="panel-card">
+              <h3>Μ.Ο. συνολικών πόντων</h3>
+              <p id="ins-avg-total" class="insight-value">0</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
       <section class="section section-alt" id="chat">
         <div class="container chat-layout">
           <div>
@@ -177,31 +207,13 @@
           <aside class="chat-panel">
             <h3>Live μηνύματα</h3>
             <p class="chat-tip">Τα μηνύματα συγχρονίζονται για όλους μέσω server.</p>
-            <p class="chat-tip">Ο καθαρισμός chat απαιτεί admin κωδικό.</p>
+            <p class="chat-tip">Ο καθαρισμός chat απαιτεί κωδικό ασφαλείας.</p>
             <p class="chat-tip">Το username κλειδώνει στην πρώτη αποστολή και δεν αλλάζει.</p>
+            <label class="chat-tip">Αναζήτηση μηνυμάτων
+              <input id="chat-search" type="text" placeholder="βρες μήνυμα ή username" />
+            </label>
+            <p id="chat-counter" class="chat-tip">0 μηνύματα</p>
             <ul id="chat-messages" class="chat-messages"></ul>
-            <hr />
-            <h4>Admin Console</h4>
-            <form id="admin-login-form" class="stack-form">
-              <label>
-                Admin Username
-                <input id="admin-username" type="text" placeholder="admin username" />
-              </label>
-              <label>
-                Admin Code
-                <input id="admin-code" type="password" placeholder="admin code" />
-              </label>
-              <button type="submit" class="btn-secondary">Admin Login</button>
-            </form>
-
-            <form id="admin-command-form" class="stack-form" style="margin-top: 10px;">
-              <label>
-                Command
-                <input id="admin-command" type="text" placeholder="/ban USER ή /unban USER ή /clear" />
-              </label>
-              <button type="submit" class="btn-secondary">Run Command</button>
-            </form>
-            <p id="admin-status" class="chat-tip">Admin commands: /ban USER, /unban USER, /clear</p>
 
           </aside>
         </div>
@@ -229,9 +241,6 @@
     </script>
     <script>
       window.CHAT_RESET_PASSWORD = window.CHAT_RESET_PASSWORD || "HotHeroes2026!";
-    </script>
-    <script>
-      window.CHAT_ADMIN = window.CHAT_ADMIN || { username: "REDKNIGHT", code: "1964" };
     </script>
     <script type="module" src="./script.js?v=20260224"></script>
   </body>

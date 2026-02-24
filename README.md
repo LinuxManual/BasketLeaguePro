@@ -2,8 +2,14 @@
 
 Professional single-page website for the basketball rivalry between **HotHeroes** and **Ιπτάμενοι**.
 
+## Major upgrade
+- Upgraded chat UX with immutable username lock per browser, live search, and message counter.
+- Added live **Game Insights** dashboard (total matches, wins per team, average total points).
+- Removed admin login and admin commands from the interface.
+- Kept protected chat reset with password.
+
 ## Firebase Setup (configured)
-The app is now prefilled with your Firebase project config:
+The app is prefilled with your Firebase project config:
 - project: `basket-clash-7901c`
 - app id: `1:307971899685:web:8143142e3fbe3526ef5acc`
 
@@ -27,28 +33,10 @@ service cloud.firestore {
 }
 ```
 
-## GitHub Pages 404 fix
-- Added `404.html` fallback redirect so unknown paths return to `/BasketLeaguePro/` instead of a dead 404 page.
-- Assets are loaded with `./styles.css` and `./script.js` paths for safer project-page resolution.
-
-## Deploy
-Deploy `index.html`, `404.html`, `styles.css`, and `script.js` to GitHub Pages.
-All devices opening that deployed page will see the same shared data from Firebase.
-
-
 ## Chat reset password
-- Chat clear/reset is protected with admin password.
 - Current password: `HotHeroes2026!`
 - You can change it in `index.html` via `window.CHAT_RESET_PASSWORD`.
 
-
-## Chat username lock & admin commands
-- Each user can chat with one username per browser: username locks on first message and cannot be changed afterwards.
-- Admin account configured:
-  - username: `REDKNIGHT`
-  - code: `1964`
-- Admin commands in chat panel:
-  - `/ban USERNAME`
-  - `/unban USERNAME`
-  - `/clear`
-- Chat reset button still requires reset password: `HotHeroes2026!`
+## GitHub Pages
+- Include: `index.html`, `404.html`, `styles.css`, `script.js`
+- Open: `https://linuxmanual.github.io/BasketLeaguePro/`

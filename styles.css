@@ -227,6 +227,26 @@ body {
   color: #ff7878;
 }
 
+
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.insight-value {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 6px 0 0;
+  color: #ffffff;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid rgba(255,255,255,0.14);
+  margin: 18px 0;
+}
+
 .management-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -449,6 +469,7 @@ textarea {
   .hero-content,
   .features-grid,
   .stats-grid,
+  .insights-grid,
   .management-grid,
   .chat-layout {
     grid-template-columns: 1fr;
