@@ -34,3 +34,9 @@ service cloud.firestore {
 ## Deploy
 Deploy `index.html`, `404.html`, `styles.css`, and `script.js` to GitHub Pages.
 All devices opening that deployed page will see the same shared data from Firebase.
+
+
+## Chat reset password
+- Chat clear/reset is protected with admin password.
+- Current password: `HotHeroes2026!`
+- You can change it in `index.html` via `window.CHAT_RESET_PASSWORD`.

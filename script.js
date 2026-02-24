@@ -33,6 +33,8 @@ const chatMessages = document.getElementById("chat-messages");
 const clearButton = document.getElementById("clear-chat");
 const connectionStatus = document.getElementById("connection-status");
 
+const CHAT_RESET_PASSWORD = window.CHAT_RESET_PASSWORD || "HotHeroes2026!";
+
 function setStatus(text, ok = true) {
   connectionStatus.textContent = text;
   connectionStatus.classList.toggle("ok", ok);
@@ -231,8 +233,20 @@ chatForm.addEventListener("submit", async (event) => {
 });
 
 clearButton.addEventListener("click", async () => {
+  const password = window.prompt("Βάλε admin κωδικό για καθαρισμό chat:");
+  if (password === null) return;
+
+  if (password !== CHAT_RESET_PASSWORD) {
+    setStatus("Λάθος κωδικός καθαρισμού chat ❌", false);
+    return;
+  }
+
+  const ok = window.confirm("Είσαι σίγουρος ότι θέλεις να διαγράψεις όλα τα μηνύματα;");
+  if (!ok) return;
+
   const snap = await getDocs(messagesRef);
   const batch = writeBatch(db);
   snap.forEach((item) => batch.delete(item.ref));
   await batch.commit();
+  setStatus("Το chat καθαρίστηκε επιτυχώς ✅", true);
 });
