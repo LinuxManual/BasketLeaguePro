@@ -28,7 +28,9 @@ function loadStore() {
 }
 
 function saveStore(store) {
-  fs.writeFileSync(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+  const tmpPath = `${STORE_PATH}.tmp`;
+  fs.writeFileSync(tmpPath, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+  fs.renameSync(tmpPath, STORE_PATH);
 }
 
 function sendJson(res, statusCode, payload) {
@@ -70,7 +72,8 @@ function createId() {
 }
 
 function serveStatic(req, res) {
-  const reqPath = req.url === "/" ? "/index.html" : req.url;
+  const pathname = new URL(req.url, "http://localhost").pathname;
+  const reqPath = pathname === "/" ? "/index.html" : pathname;
   const safePath = path.normalize(reqPath).replace(/^\.\.(\/|\\|$)/, "");
   const fullPath = path.join(__dirname, safePath);
 
@@ -89,7 +92,12 @@ function serveStatic(req, res) {
 
     const ext = path.extname(fullPath);
     const contentType = MIME_TYPES[ext] || "application/octet-stream";
-    res.writeHead(200, { "Content-Type": contentType });
+    res.writeHead(200, {
+      "Content-Type": contentType,
+      "Cache-Control": "no-store, max-age=0",
+      Pragma: "no-cache",
+      Expires: "0"
+    });
     res.end(file);
   });
 }

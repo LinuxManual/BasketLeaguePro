@@ -17,4 +17,7 @@ Professional single-page website for the basketball rivalry between **HotHeroes*
    - `http://192.168.1.20:4173`
 4. In the page field **"URL server"**, set the same server URL and press **"Σύνδεση"**.
 
-> Important: If each device opens a different host (e.g. `localhost` on each device), data will not be shared.
+## If updates/messages still do not appear
+- Do a hard refresh on each device/browser tab (`Ctrl+F5` or equivalent).
+- Make sure all devices use the exact same server URL/IP and port.
+- Do **not** open `localhost` on each device separately.
