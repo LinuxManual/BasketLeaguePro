@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="el">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Basket Clash | HotHeroes vs Ιπτάμενοι</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero" id="top">
+      <nav class="nav container">
+        <a class="brand" href="#top">Basket Clash</a>
+        <div class="nav-links">
+          <a href="#about">Σχετικά</a>
+          <a href="#management">Διαχείριση</a>
+          <a href="#schedule">Αγώνες</a>
+          <a href="#chat">Chat</a>
+        </div>
+      </nav>
+
+      <div class="hero-content container">
+        <div class="team-card hotheroes">
+          <h2>HotHeroes</h2>
+          <p>Ταχύτητα, πάθος και επίθεση υψηλής έντασης.</p>
+          <h3>Μέλη Ομάδας</h3>
+          <ul id="hotheroes-list" class="roster-list"></ul>
+        </div>
+
+        <div class="versus">
+          <p class="league">Basket League Pro</p>
+          <h1>HotHeroes <span>vs</span> Ιπτάμενοι</h1>
+          <p class="subtitle">Όλα τα δεδομένα αγώνων και ομάδων περνάνε από εσένα.</p>
+          <a class="btn-primary" href="#management">Πρόσθεσε μέλη & αγώνες</a>
+        </div>
+
+        <div class="team-card iptamenoi">
+          <h2>Ιπτάμενοι</h2>
+          <p>Αθλητικότητα, άμυνα και εντυπωσιακά καρφώματα.</p>
+          <h3>Μέλη Ομάδας</h3>
+          <ul id="iptamenoi-list" class="roster-list"></ul>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="section container" id="about">
+        <div class="section-heading">
+          <h2>Η πλατφόρμα των δύο ομάδων</h2>
+          <p>
+            Εδώ μπορείς να ορίσεις εσύ τη σύνθεση των ομάδων, να δημιουργήσεις αγώνες, να βάλεις
+            τα σκορ και να τα βλέπουν όλοι από τον ίδιο server.
+          </p>
+        </div>
+        <article class="panel-card api-config-card">
+          <h3>Σύνδεση με κοινό server</h3>
+          <form id="api-config-form" class="stack-form api-config-form">
+            <label>
+              URL server (ίδιο για όλες τις συσκευές)
+              <input id="api-base-url" type="url" placeholder="π.χ. http://192.168.1.20:4173" required />
+            </label>
+            <button class="btn-primary" type="submit">Σύνδεση</button>
+          </form>
+          <p id="connection-status" class="connection-status">Έλεγχος σύνδεσης...</p>
+          <p class="chat-tip">Ενεργός server: <span id="active-api-base"></span></p>
+        </article>
+      </section>
+
+      <section class="section section-alt" id="management">
+        <div class="container management-grid">
+          <article class="panel-card">
+            <h3>Προσθήκη μέλους</h3>
+            <form id="player-form" class="stack-form">
+              <label>
+                Ομάδα
+                <select id="team-select" required>
+                  <option value="HotHeroes">HotHeroes</option>
+                  <option value="Ιπτάμενοι">Ιπτάμενοι</option>
+                </select>
+              </label>
+              <label>
+                Όνομα μέλους
+                <input id="player-name" type="text" maxlength="40" required placeholder="π.χ. Γιάννης Π." />
+              </label>
+              <button class="btn-primary" type="submit">Προσθήκη</button>
+            </form>
+          </article>
+
+          <article class="panel-card">
+            <h3>Νέος αγώνας</h3>
+            <form id="match-form" class="stack-form">
+              <label>
+                Ημερομηνία
+                <input id="match-date" type="date" required />
+              </label>
+              <label>
+                Ώρα
+                <input id="match-time" type="time" required />
+              </label>
+              <label>
+                Γήπεδο
+                <input id="match-court" type="text" maxlength="50" required placeholder="π.χ. Κλειστό Νέας Πόλης" />
+              </label>
+              <button class="btn-primary" type="submit">Δημιουργία αγώνα</button>
+            </form>
+          </article>
+
+          <article class="panel-card">
+            <h3>Καταχώρηση σκορ</h3>
+            <form id="score-form" class="stack-form">
+              <label>
+                Αγώνας
+                <select id="match-select" required></select>
+              </label>
+              <label>
+                HotHeroes
+                <input id="score-hot" type="number" min="0" required />
+              </label>
+              <label>
+                Ιπτάμενοι
+                <input id="score-fly" type="number" min="0" required />
+              </label>
+              <button class="btn-primary" type="submit">Αποθήκευση σκορ</button>
+            </form>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="schedule">
+        <div class="container">
+          <div class="section-heading">
+            <h2>Πρόγραμμα Αγώνων</h2>
+            <p>Οι αγώνες που δημιουργείς και τα σκορ τους αποθηκεύονται αυτόματα.</p>
+          </div>
+          <div class="schedule-table-wrapper">
+            <table class="schedule-table">
+              <thead>
+                <tr>
+                  <th>Ημερομηνία</th>
+                  <th>Ώρα</th>
+                  <th>Γήπεδο</th>
+                  <th>Matchup</th>
+                  <th>Σκορ</th>
+                  <th>Κατάσταση</th>
+                </tr>
+              </thead>
+              <tbody id="matches-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-alt" id="chat">
+        <div class="container chat-layout">
+          <div>
+            <div class="section-heading left-align">
+              <h2>Fan Zone Chat</h2>
+              <p>
+                Γράψε μήνυμα ως φίλαθλος. Τα δεδομένα αποθηκεύονται στον server και τα βλέπουν όλοι από οποιαδήποτε συσκευή.
+              </p>
+            </div>
+
+            <form id="chat-form" class="chat-form">
+              <label>
+                Όνομα
+                <input type="text" id="username" placeholder="π.χ. Giorgos23" required maxlength="24" />
+              </label>
+              <label>
+                Μήνυμα
+                <textarea id="message" rows="4" placeholder="Γράψε την άποψή σου για τον αγώνα..." required maxlength="280"></textarea>
+              </label>
+              <div class="chat-actions">
+                <button type="submit" class="btn-primary">Αποστολή</button>
+                <button type="button" id="clear-chat" class="btn-secondary">Καθαρισμός Chat</button>
+              </div>
+            </form>
+          </div>
+
+          <aside class="chat-panel">
+            <h3>Live μηνύματα</h3>
+            <p class="chat-tip">Τα μηνύματα συγχρονίζονται για όλους μέσω server.</p>
+            <ul id="chat-messages" class="chat-messages"></ul>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-content">
+        <p>© 2026 Basket Clash • HotHeroes & Ιπτάμενοι</p>
+        <a href="#top">Επιστροφή στην κορυφή</a>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
