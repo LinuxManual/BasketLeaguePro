@@ -32,7 +32,7 @@
         <div class="versus">
           <p class="league">Basket League Pro</p>
           <h1>HotHeroes <span>vs</span> Ιπτάμενοι</h1>
-          <p class="subtitle">Τα δεδομένα αποθηκεύονται πλέον στο Cloud και είναι προσβάσιμα από παντού.</p>
+          <p class="subtitle">Τα δεδομένα συγχρονίζονται πλέον ζωντανά μέσω Firebase Cloud.</p>
           <a class="btn-primary" href="#management">Πρόσθεσε μέλη & αγώνες</a>
         </div>
 
@@ -49,7 +49,7 @@
       <section class="section container" id="about">
         <div class="section-heading">
           <h2>Η πλατφόρμα των δύο ομάδων</h2>
-          <p>Διαχείριση συνθέσεων, αγώνων και live chat με αυτόματο συγχρονισμό μεταξύ συσκευών.</p>
+          <p>Διαχείριση συνθέσεων και αγώνων σε πραγματικό χρόνο.</p>
         </div>
       </section>
 
@@ -97,9 +97,7 @@
         <div class="container">
           <div class="section-heading">
             <h2>Πρόγραμμα Αγώνων</h2>
-            <p>Όλοι οι αγώνες και τα σκορ ενημερώνονται σε πραγματικό χρόνο.</p>
-          </div>
-          <div class="schedule-table-wrapper">
+            <tbody id="matches-body"></tbody>
             <table class="schedule-table">
               <thead>
                 <tr>
@@ -117,7 +115,7 @@
           <div>
             <div class="section-heading left-align">
               <h2>Fan Zone Live Chat</h2>
-              <p>Στείλε το μήνυμά σου και δες το να εμφανίζεται αμέσως σε όλους τους χρήστες.</p>
+              <p>Τα μηνύματα εμφανίζονται αμέσως σε όλους τους χρήστες.</p>
             </div>
             <form id="chat-form" class="chat-form">
               <label>Όνομα <input type="text" id="username" placeholder="π.χ. Giorgos23" required maxlength="24" /></label>
@@ -130,7 +128,7 @@
           </div>
           <aside class="chat-panel">
             <h3>Live μηνύματα</h3>
-            <p class="chat-tip">Τα μηνύματα συγχρονίζονται μέσω Cloud Firestore.</p>
+            <p class="chat-tip">Συγχρονισμός μέσω Cloud Firestore.</p>
             <ul id="chat-messages" class="chat-messages"></ul>
           </aside>
         </div>
@@ -146,6 +144,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
     <script src="script.js"></script>
   </body>
 </html>
