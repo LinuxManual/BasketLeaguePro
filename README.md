@@ -27,6 +27,10 @@ service cloud.firestore {
 }
 ```
 
+## GitHub Pages 404 fix
+- Added `404.html` fallback redirect so unknown paths return to `/BasketLeaguePro/` instead of a dead 404 page.
+- Assets are loaded with `./styles.css` and `./script.js` paths for safer project-page resolution.
+
 ## Deploy
-Deploy `index.html`, `styles.css`, and `script.js` to GitHub Pages.
+Deploy `index.html`, `404.html`, `styles.css`, and `script.js` to GitHub Pages.
 All devices opening that deployed page will see the same shared data from Firebase.

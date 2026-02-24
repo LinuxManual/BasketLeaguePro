@@ -11,6 +11,17 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css?v=20260224" />
+  
+    <script>
+      // GitHub Pages fallback: redirect unknown paths back to project root
+      (function () {
+        var repo = '/BasketLeaguePro/';
+        if (!location.pathname.startsWith(repo)) return;
+        if (location.pathname !== repo && !location.pathname.endsWith('index.html')) {
+          location.replace(repo);
+        }
+      })();
+    </script>
   </head>
   <body>
     <header class="hero" id="top">
