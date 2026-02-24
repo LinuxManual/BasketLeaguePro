@@ -10,14 +10,19 @@ Professional single-page website for the basketball rivalry between **HotHeroes*
 - Shared persistence on server: all users from any device see the same data.
 
 ## Run (shared across devices)
-1. Start server on one machine:
+1. Start backend server on one machine:
    - `node server.js`
 2. Find that machine's local IP (example `192.168.1.20`).
-3. Open the site from every device using that same URL:
+3. Open the site from every device using the same host:
    - `http://192.168.1.20:4173`
-4. In the page field **"URL server"**, set the same server URL and press **"Σύνδεση"**.
+4. In page field **"URL server"**, set the same backend URL and press **"Σύνδεση"**.
 
-## If updates/messages still do not appear
-- Do a hard refresh on each device/browser tab (`Ctrl+F5` or equivalent).
-- Make sure all devices use the exact same server URL/IP and port.
-- Do **not** open `localhost` on each device separately.
+## Important for GitHub Pages
+- `https://...github.io/...` is static hosting only (no Node backend `/api`).
+- If frontend is HTTPS, backend must also be HTTPS (browser blocks HTTP backend as mixed content).
+- So for GitHub Pages, set an external HTTPS backend URL in the "URL server" field.
+
+## Troubleshooting
+- Hard refresh each device (`Ctrl+F5`).
+- Confirm all devices use exactly the same backend URL.
+- Do **not** use `localhost` on each device separately.

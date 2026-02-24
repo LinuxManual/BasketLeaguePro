@@ -38,7 +38,25 @@ function setStatus(text, ok = true) {
   activeApiBase.textContent = apiBase;
 }
 
+function validateApiBase() {
+  if (window.location.hostname.endsWith("github.io") && apiBase === window.location.origin) {
+    setStatus("Σε GitHub Pages χρειάζεται ξεχωριστό backend URL (όχι το ίδιο github.io) ❌", false);
+    return false;
+  }
+
+  if (window.location.protocol === "https:" && apiBase.startsWith("http://")) {
+    setStatus("Το site είναι HTTPS και μπλοκάρει HTTP backend (mixed content). Βάλε HTTPS backend URL ❌", false);
+    return false;
+  }
+
+  return true;
+}
+
 async function apiRequest(path, options = {}) {
+  if (!validateApiBase()) {
+    throw new Error("Invalid API base for this page context");
+  }
+
   const response = await fetch(`${apiBase}${path}`, {
     headers: { "Content-Type": "application/json" },
     ...options
@@ -166,10 +184,11 @@ apiConfigForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   apiBase = normalizeApiBase(apiBaseInput.value);
   localStorage.setItem(API_BASE_KEY, apiBase);
+  if (!validateApiBase()) return;
   try {
     await refreshState();
-  } catch {
-    setStatus("Δεν μπορεί να γίνει σύνδεση στον server ❌", false);
+  } catch (error) {
+    setStatus(`Δεν μπορεί να γίνει σύνδεση στον server ❌ (${error.message})`, false);
   }
 });
 
@@ -226,10 +245,14 @@ clearButton.addEventListener("click", async () => {
 setInterval(() => refreshState().catch(() => setStatus("Δεν μπορεί να γίνει σύνδεση στον server ❌", false)), 1500);
 
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") refreshState().catch(() => setStatus("Δεν μπορεί να γίνει σύνδεση στον server ❌", false));
+  if (document.visibilityState === "visible") if (validateApiBase()) {
+  refreshState().catch((error) => setStatus(`Δεν μπορεί να γίνει σύνδεση στον server ❌ (${error.message})`, false));
+}
 });
 window.addEventListener("focus", () => refreshState().catch(() => setStatus("Δεν μπορεί να γίνει σύνδεση στον server ❌", false)));
 
 apiBaseInput.value = apiBase;
 activeApiBase.textContent = apiBase;
-refreshState().catch(() => setStatus("Δεν μπορεί να γίνει σύνδεση στον server ❌", false));
+if (validateApiBase()) {
+  refreshState().catch((error) => setStatus(`Δεν μπορεί να γίνει σύνδεση στον server ❌ (${error.message})`, false));
+}
