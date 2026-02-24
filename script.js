@@ -1,280 +1,139 @@
-const CHAT_KEY = "basketclash-chat-messages";
-const DATA_KEY = "basketclash-site-data";
-
-const DEFAULT_DATA = {
-  rosters: {
-    HotHeroes: [],
-    "Ιπτάμενοι": []
-  },
-  matches: []
+// 1. Το δικό σου Firebase Configuration [Ανανεωμένο]
+const firebaseConfig = {
+  apiKey: "AIzaSyBm5k1wF7-RaC8hEtTy2Phznxey0FnAcsU",
+  authDomain: "basket-clash-7901c.firebaseapp.com",
+  projectId: "basket-clash-7901c",
+  storageBucket: "basket-clash-7901c.firebasestorage.app",
+  messagingSenderId: "307971899685",
+  appId: "1:307971899685:web:8143142e3fbe3526ef5acc",
+  measurementId: "G-SDPWG5QT2N"
 };
 
-const playerForm = document.getElementById("player-form");
-const matchForm = document.getElementById("match-form");
-const scoreForm = document.getElementById("score-form");
+// Αρχικοποίηση Firebase (Compat mode για ευκολία)
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// 2. DOM Elements
 const hotHeroesList = document.getElementById("hotheroes-list");
 const iptamenoiList = document.getElementById("iptamenoi-list");
 const matchesBody = document.getElementById("matches-body");
 const matchSelect = document.getElementById("match-select");
-
-const chatForm = document.getElementById("chat-form");
 const chatMessages = document.getElementById("chat-messages");
-const clearButton = document.getElementById("clear-chat");
 
-function loadSiteData() {
-  const saved = localStorage.getItem(DATA_KEY);
-  if (!saved) return structuredClone(DEFAULT_DATA);
+// --- LIVE LISTENERS (Αυτόματη ενημέρωση από Cloud) ---
 
-  try {
-    const parsed = JSON.parse(saved);
-    return {
-      rosters: {
-        HotHeroes: Array.isArray(parsed?.rosters?.HotHeroes) ? parsed.rosters.HotHeroes : [],
-        "Ιπτάμενοι": Array.isArray(parsed?.rosters?.["Ιπτάμενοι"]) ? parsed.rosters["Ιπτάμενοι"] : []
-      },
-      matches: Array.isArray(parsed?.matches) ? parsed.matches : []
-    };
-  } catch {
-    return structuredClone(DEFAULT_DATA);
+// Ρόστερ Ομάδων
+db.collection("siteData").doc("rosters").onSnapshot((doc) => {
+  if (doc.exists) {
+    const data = doc.data();
+    renderRoster(hotHeroesList, data.HotHeroes || []);
+    renderRoster(iptamenoiList, data.Ιπτάμενοι || []);
   }
-}
+});
 
-function saveSiteData(data) {
-  localStorage.setItem(DATA_KEY, JSON.stringify(data));
-}
+// Αγώνες
+db.collection("matches").orderBy("date").onSnapshot((snapshot) => {
+  const matches = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  renderMatches(matches);
+  renderMatchSelect(matches);
+});
 
-function renderRoster(listElement, players) {
-  listElement.innerHTML = "";
-  if (!players.length) {
+// Chat (Τελευταία 50 μηνύματα)
+db.collection("messages").orderBy("createdAt", "desc").limit(50).onSnapshot((snapshot) => {
+  chatMessages.innerHTML = "";
+  snapshot.forEach(doc => {
+    const msg = doc.data();
+    const time = msg.createdAt ? msg.createdAt.toDate() : new Date();
+    chatMessages.appendChild(createMessageElement(msg.user, msg.text, time));
+  });
+});
+
+// --- ΣΥΝΑΡΤΗΣΕΙΣ RENDER ---
+
+function renderRoster(el, players) {
+  el.innerHTML = players.length ? "" : "<li>Κανένας παίκτης ακόμα.</li>";
+  players.forEach(p => {
     const li = document.createElement("li");
-    li.textContent = "Δεν έχουν οριστεί ακόμα μέλη.";
-    listElement.append(li);
-    return;
-  }
-
-  players.forEach((name) => {
-    const li = document.createElement("li");
-    li.textContent = name;
-    listElement.append(li);
+    li.textContent = p;
+    el.appendChild(li);
   });
 }
 
-function formatDate(dateValue) {
-  return new Date(`${dateValue}T00:00:00`).toLocaleDateString("el-GR");
-}
-
 function renderMatches(matches) {
-  matchesBody.innerHTML = "";
-
-  if (!matches.length) {
-    const row = document.createElement("tr");
-    row.innerHTML = '<td colspan="6">Δεν υπάρχουν αγώνες ακόμα.</td>';
-    matchesBody.append(row);
-    return;
-  }
-
-  matches.forEach((match) => {
-    const row = document.createElement("tr");
-    const hasScore = Number.isInteger(match.hotScore) && Number.isInteger(match.flyScore);
-
-    row.innerHTML = `
-      <td>${formatDate(match.date)}</td>
-      <td>${match.time}</td>
-      <td>${match.court}</td>
+  matchesBody.innerHTML = matches.length ? "" : '<tr><td colspan="6">Δεν βρέθηκαν αγώνες.</td></tr>';
+  matches.forEach(m => {
+    const hasScore = m.hotScore !== null && m.flyScore !== null;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${m.date}</td><td>${m.time}</td><td>${m.court}</td>
       <td>HotHeroes vs Ιπτάμενοι</td>
-      <td>${hasScore ? `${match.hotScore} - ${match.flyScore}` : "-"}</td>
-      <td><span class="status ${hasScore ? "done" : "upcoming"}">${hasScore ? "Completed" : "Upcoming"}</span></td>
+      <td>${hasScore ? `${m.hotScore} - ${m.flyScore}` : "-"}</td>
+      <td><span class="status ${hasScore ? 'done' : 'upcoming'}">${hasScore ? 'Completed' : 'Upcoming'}</span></td>
     `;
-
-    matchesBody.append(row);
+    matchesBody.appendChild(tr);
   });
 }
 
 function renderMatchSelect(matches) {
-  matchSelect.innerHTML = "";
-
-  if (!matches.length) {
-    const option = document.createElement("option");
-    option.textContent = "Πρώτα πρόσθεσε αγώνα";
-    option.value = "";
-    matchSelect.append(option);
-    return;
-  }
-
-  matches.forEach((match) => {
-    const option = document.createElement("option");
-    option.value = match.id;
-    option.textContent = `${formatDate(match.date)} ${match.time} • ${match.court}`;
-    matchSelect.append(option);
+  matchSelect.innerHTML = '<option value="">Επίλεξε αγώνα...</option>';
+  matches.forEach(m => {
+    const opt = document.createElement("option");
+    opt.value = m.id;
+    opt.textContent = `${m.date} - ${m.court}`;
+    matchSelect.appendChild(opt);
   });
 }
 
-function renderSiteData() {
-  const data = loadSiteData();
-  renderRoster(hotHeroesList, data.rosters.HotHeroes);
-  renderRoster(iptamenoiList, data.rosters["Ιπτάμενοι"]);
-  renderMatches(data.matches);
-  renderMatchSelect(data.matches);
+function createMessageElement(user, text, date) {
+  const li = document.createElement("li");
+  li.className = "chat-item";
+  li.innerHTML = `
+    <div class="chat-item-header"><strong>${user}</strong> <time>${date.toLocaleTimeString('el-GR')}</time></div>
+    <p>${text}</p>
+  `;
+  return li;
 }
 
-playerForm.addEventListener("submit", (event) => {
-  event.preventDefault();
+// --- FORMS (Αποστολή στη Database) ---
+
+document.getElementById("player-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
   const team = document.getElementById("team-select").value;
-  const playerName = document.getElementById("player-name");
-  const name = playerName.value.trim();
-  if (!name) return;
-
-  const data = loadSiteData();
-  data.rosters[team].push(name);
-  saveSiteData(data);
-  playerName.value = "";
-  renderSiteData();
+  const name = document.getElementById("player-name").value.trim();
+  await db.collection("siteData").doc("rosters").set({
+    [team]: firebase.firestore.FieldValue.arrayUnion(name)
+  }, { merge: true });
+  e.target.reset();
 });
 
-matchForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-
-  const date = document.getElementById("match-date").value;
-  const time = document.getElementById("match-time").value;
-  const courtInput = document.getElementById("match-court");
-  const court = courtInput.value.trim();
-
-  if (!date || !time || !court) return;
-
-  const data = loadSiteData();
-  data.matches.push({
-    id: crypto.randomUUID(),
-    date,
-    time,
-    court,
-    hotScore: null,
-    flyScore: null
+document.getElementById("match-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  await db.collection("matches").add({
+    date: document.getElementById("match-date").value,
+    time: document.getElementById("match-time").value,
+    court: document.getElementById("match-court").value,
+    hotScore: null, flyScore: null
   });
-
-  data.matches.sort((a, b) => {
-    const aDate = new Date(`${a.date}T${a.time}`);
-    const bDate = new Date(`${b.date}T${b.time}`);
-    return aDate - bDate;
-  });
-
-  saveSiteData(data);
-  matchForm.reset();
-  renderSiteData();
+  e.target.reset();
 });
 
-scoreForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const matchId = matchSelect.value;
-  const hotScore = Number.parseInt(document.getElementById("score-hot").value, 10);
-  const flyScore = Number.parseInt(document.getElementById("score-fly").value, 10);
-
-  if (!matchId || Number.isNaN(hotScore) || Number.isNaN(flyScore)) return;
-
-  const data = loadSiteData();
-  const match = data.matches.find((item) => item.id === matchId);
-  if (!match) return;
-
-  match.hotScore = hotScore;
-  match.flyScore = flyScore;
-
-  saveSiteData(data);
-  scoreForm.reset();
-  renderSiteData();
+document.getElementById("score-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const id = matchSelect.value;
+  if(!id) return;
+  await db.collection("matches").doc(id).update({
+    hotScore: Number(document.getElementById("score-hot").value),
+    flyScore: Number(document.getElementById("score-fly").value)
+  });
+  e.target.reset();
 });
 
-function loadMessages() {
-  const saved = localStorage.getItem(CHAT_KEY);
-  if (!saved) {
-    return [];
-  }
-
-  try {
-    const parsed = JSON.parse(saved);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveMessages(messages) {
-  localStorage.setItem(CHAT_KEY, JSON.stringify(messages));
-}
-
-function createMessageElement(message) {
-  const item = document.createElement("li");
-  item.className = "chat-item";
-
-  const header = document.createElement("div");
-  header.className = "chat-item-header";
-
-  const author = document.createElement("strong");
-  author.textContent = message.user;
-
-  const timestamp = document.createElement("time");
-  timestamp.textContent = new Date(message.createdAt).toLocaleString("el-GR", {
-    dateStyle: "short",
-    timeStyle: "short"
+document.getElementById("chat-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const user = document.getElementById("username").value;
+  const text = document.getElementById("message").value;
+  await db.collection("messages").add({
+    user, text, createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
-
-  const text = document.createElement("p");
-  text.textContent = message.text;
-
-  header.append(author, timestamp);
-  item.append(header, text);
-
-  return item;
-}
-
-function renderMessages() {
-  const messages = loadMessages();
-  chatMessages.innerHTML = "";
-
-  if (messages.length === 0) {
-    const emptyState = document.createElement("li");
-    emptyState.className = "chat-item";
-    emptyState.textContent = "Δεν υπάρχουν ακόμα μηνύματα. Γίνε ο πρώτος!";
-    chatMessages.append(emptyState);
-    return;
-  }
-
-  messages.forEach((message) => {
-    chatMessages.append(createMessageElement(message));
-  });
-
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-chatForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-
-  const usernameInput = document.getElementById("username");
-  const messageInput = document.getElementById("message");
-
-  const user = usernameInput.value.trim();
-  const text = messageInput.value.trim();
-
-  if (!user || !text) {
-    return;
-  }
-
-  const messages = loadMessages();
-  messages.unshift({
-    user,
-    text,
-    createdAt: Date.now()
-  });
-
-  const MAX_MESSAGES = 100;
-  saveMessages(messages.slice(0, MAX_MESSAGES));
-
-  messageInput.value = "";
-  renderMessages();
+  document.getElementById("message").value = "";
 });
-
-clearButton.addEventListener("click", () => {
-  localStorage.removeItem(CHAT_KEY);
-  renderMessages();
-});
-
-renderSiteData();
-renderMessages();
