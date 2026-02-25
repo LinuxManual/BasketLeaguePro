@@ -20,7 +20,8 @@ const LOCKED_USERNAME_KEY = "basketleaguepro-locked-username";
 const state = {
   rosters: { HotHeroes: [], "Ιπτάμενοι": [] },
   matches: [],
-  messages: []
+  messages: [],
+  bets: []
 };
 
 const playerForm = document.getElementById("player-form");
@@ -30,6 +31,9 @@ const hotHeroesList = document.getElementById("hotheroes-list");
 const iptamenoiList = document.getElementById("iptamenoi-list");
 const matchesBody = document.getElementById("matches-body");
 const matchSelect = document.getElementById("match-select");
+const betForm = document.getElementById("bet-form");
+const betMatchSelect = document.getElementById("bet-match-select");
+const betsBody = document.getElementById("bets-body");
 const chatForm = document.getElementById("chat-form");
 const usernameInput = document.getElementById("username");
 const messageInput = document.getElementById("message");
@@ -45,6 +49,14 @@ const insFlyWins = document.getElementById("ins-fly-wins");
 const insAvgTotal = document.getElementById("ins-avg-total");
 
 const CHAT_RESET_PASSWORD = window.CHAT_RESET_PASSWORD || "HotHeroes2026!";
+
+
+const euroFormatter = new Intl.NumberFormat("el-GR", {
+  style: "currency",
+  currency: "EUR",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+});
 
 function setStatus(text, ok = true) {
   connectionStatus.textContent = text;
@@ -84,6 +96,7 @@ const db = getFirestore(app);
 const rostersRef = doc(db, "basketLeaguePro", "rosters");
 const matchesRef = collection(db, "basketLeaguePro", "matches", "items");
 const messagesRef = collection(db, "basketLeaguePro", "messages", "items");
+const betsRef = collection(db, "basketLeaguePro", "bets", "items");
 
 function formatDate(dateValue) {
   return new Date(`${dateValue}T00:00:00`).toLocaleDateString("el-GR");
@@ -131,11 +144,13 @@ function renderMatches(matches) {
 
 function renderMatchSelect(matches) {
   matchSelect.innerHTML = "";
+  betMatchSelect.innerHTML = "";
   if (!matches.length) {
     const option = document.createElement("option");
     option.textContent = "Πρώτα πρόσθεσε αγώνα";
     option.value = "";
     matchSelect.append(option);
+    betMatchSelect.append(option.cloneNode(true));
     return;
   }
 
@@ -144,6 +159,44 @@ function renderMatchSelect(matches) {
     option.value = match.id;
     option.textContent = `${formatDate(match.date)} ${match.time} • ${match.court}`;
     matchSelect.append(option);
+    betMatchSelect.append(option.cloneNode(true));
+  });
+}
+
+function renderBets(matches, bets) {
+  betsBody.innerHTML = "";
+  if (!bets.length) {
+    const row = document.createElement("tr");
+    row.innerHTML = '<td colspan="5">Δεν υπάρχουν στοιχήματα ακόμα.</td>';
+    betsBody.append(row);
+    return;
+  }
+
+  const matchesById = new Map(matches.map((m) => [m.id, m]));
+  const ordered = [...bets].sort((a, b) => b.createdAt - a.createdAt).slice(0, 150);
+  ordered.forEach((bet) => {
+    const match = matchesById.get(bet.matchId);
+    const row = document.createElement("tr");
+    const matchLabel = match
+      ? `${formatDate(match.date)} ${match.time} • ${match.court}`
+      : "Αγώνας που αφαιρέθηκε";
+
+    let resultLabel = "Pending";
+    let resultClass = "upcoming";
+    if (match && Number.isInteger(match.hotScore) && Number.isInteger(match.flyScore)) {
+      const correct = match.hotScore === bet.predHot && match.flyScore === bet.predFly;
+      resultLabel = correct ? "Won" : "Lost";
+      resultClass = correct ? "done" : "lost";
+    }
+
+    row.innerHTML = `
+      <td>${matchLabel}</td>
+      <td>${bet.user}</td>
+      <td>${bet.predHot} - ${bet.predFly}</td>
+      <td>${euroFormatter.format(Number(bet.stake) || 0)}</td>
+      <td><span class="status ${resultClass}">${resultLabel}</span></td>
+    `;
+    betsBody.append(row);
   });
 }
 
@@ -214,11 +267,12 @@ function renderAll() {
   renderRoster(iptamenoiList, state.rosters["Ιπτάμενοι"]);
   renderMatches(orderedMatches);
   renderMatchSelect(orderedMatches);
+  renderBets(orderedMatches, state.bets);
   renderInsights(orderedMatches);
   renderMessages(orderedMessages);
 }
 
-let listenersReady = { rosters: false, matches: false, messages: false };
+let listenersReady = { rosters: false, matches: false, messages: false, bets: false };
 function markReady(key) {
   listenersReady[key] = true;
   if (Object.values(listenersReady).every(Boolean)) {
@@ -247,6 +301,12 @@ onSnapshot(query(messagesRef, orderBy("createdAt", "desc")), (snap) => {
   markReady("messages");
   renderAll();
 }, (error) => setStatus(`Firebase chat error ❌ (${error.message})`, false));
+
+onSnapshot(query(betsRef, orderBy("createdAt", "desc")), (snap) => {
+  state.bets = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  markReady("bets");
+  renderAll();
+}, (error) => setStatus(`Firebase betting error ❌ (${error.message})`, false));
 
 playerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -279,6 +339,23 @@ scoreForm.addEventListener("submit", async (event) => {
 
   await updateDoc(doc(matchesRef, matchId), { hotScore, flyScore });
   scoreForm.reset();
+});
+
+betForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const matchId = betMatchSelect.value;
+  const user = document.getElementById("bet-user").value.trim();
+  const predHot = Number.parseInt(document.getElementById("bet-hot").value, 10);
+  const predFly = Number.parseInt(document.getElementById("bet-fly").value, 10);
+  const stake = Number.parseFloat(document.getElementById("bet-stake").value);
+  const normalizedStake = Number(stake.toFixed(2));
+
+  if (!matchId || !user || Number.isNaN(predHot) || Number.isNaN(predFly) || Number.isNaN(stake) || normalizedStake <= 0) {
+    return;
+  }
+
+  await addDoc(betsRef, { matchId, user, predHot, predFly, stake: normalizedStake, createdAt: Date.now() });
+  betForm.reset();
 });
 
 chatForm.addEventListener("submit", async (event) => {
