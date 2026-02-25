@@ -91,12 +91,20 @@ function renderRoster(listElement, players) {
   });
 }
 
+function formatMatchDate(rawDate) {
+  const parsed = new Date(rawDate);
+  return Number.isNaN(parsed.getTime()) ? rawDate : parsed.toLocaleDateString("el-GR");
+}
+
 function renderMatches(matches) {
   matchesBody.innerHTML = "";
 
   if (!matches.length) {
     const row = document.createElement("tr");
-    row.innerHTML = '<td colspan="6">Δεν υπάρχουν αγώνες ακόμα.</td>';
+    const cell = document.createElement("td");
+    cell.colSpan = 6;
+    cell.textContent = "Δεν υπάρχουν αγώνες ακόμα.";
+    row.append(cell);
     matchesBody.append(row);
     return;
   }
@@ -104,14 +112,29 @@ function renderMatches(matches) {
   matches.forEach((match) => {
     const row = document.createElement("tr");
     const hasScore = Number.isInteger(match.hotScore) && Number.isInteger(match.flyScore);
-    row.innerHTML = `
-      <td>${new Date(match.date).toLocaleDateString("el-GR")}</td>
-      <td>${match.time}</td>
-      <td>${match.court}</td>
-      <td>HotHeroes vs Ιπτάμενοι</td>
-      <td>${hasScore ? `${match.hotScore} - ${match.flyScore}` : "-"}</td>
-      <td><span class="status ${hasScore ? "done" : "upcoming"}">${hasScore ? "Completed" : "Upcoming"}</span></td>
-    `;
+
+    const dateCell = document.createElement("td");
+    dateCell.textContent = formatMatchDate(match.date);
+
+    const timeCell = document.createElement("td");
+    timeCell.textContent = match.time || "-";
+
+    const courtCell = document.createElement("td");
+    courtCell.textContent = match.court || "-";
+
+    const matchupCell = document.createElement("td");
+    matchupCell.textContent = "HotHeroes vs Ιπτάμενοι";
+
+    const scoreCell = document.createElement("td");
+    scoreCell.textContent = hasScore ? `${match.hotScore} - ${match.flyScore}` : "-";
+
+    const statusCell = document.createElement("td");
+    const badge = document.createElement("span");
+    badge.className = `status ${hasScore ? "done" : "upcoming"}`;
+    badge.textContent = hasScore ? "Completed" : "Upcoming";
+    statusCell.append(badge);
+
+    row.append(dateCell, timeCell, courtCell, matchupCell, scoreCell, statusCell);
     matchesBody.append(row);
   });
 }
@@ -170,15 +193,26 @@ function renderBets(bets, matches) {
     const amount = Number(bet.amount || 0).toFixed(2);
 
     item.className = "bet-item";
-    item.innerHTML = `
-      <div class="bet-row">
-        <strong>${bet.bettor}</strong>
-        <span class="status ${status.className}">${status.label}</span>
-      </div>
-      <p>Πρόβλεψη: ${bet.winner} • Ποντάρισμα: €${amount}</p>
-      <p>${status.payout === null ? "Περιμένει σκορ." : `Πληρωμή: €${status.payout}`}</p>
-    `;
 
+    const row = document.createElement("div");
+    row.className = "bet-row";
+
+    const name = document.createElement("strong");
+    name.textContent = bet.bettor || "Παίκτης";
+
+    const statusBadge = document.createElement("span");
+    statusBadge.className = `status ${status.className}`;
+    statusBadge.textContent = status.label;
+
+    row.append(name, statusBadge);
+
+    const prediction = document.createElement("p");
+    prediction.textContent = `Πρόβλεψη: ${bet.winner || "-"} • Ποντάρισμα: €${amount}`;
+
+    const payout = document.createElement("p");
+    payout.textContent = status.payout === null ? "Περιμένει σκορ." : `Πληρωμή: €${status.payout}`;
+
+    item.append(row, prediction, payout);
     betsList.append(item);
   });
 }
@@ -186,13 +220,22 @@ function renderBets(bets, matches) {
 function createMessageElement(user, text, date) {
   const item = document.createElement("li");
   item.className = "chat-item";
-  item.innerHTML = `
-    <div class="chat-item-header">
-      <strong>${user}</strong>
-      <time>${date.toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" })}</time>
-    </div>
-    <p>${text}</p>
-  `;
+
+  const header = document.createElement("div");
+  header.className = "chat-item-header";
+
+  const username = document.createElement("strong");
+  username.textContent = user;
+
+  const time = document.createElement("time");
+  time.textContent = date.toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" });
+
+  header.append(username, time);
+
+  const message = document.createElement("p");
+  message.textContent = text;
+
+  item.append(header, message);
   return item;
 }
 
