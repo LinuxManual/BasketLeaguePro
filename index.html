@@ -17,6 +17,7 @@
           <a href="#about">Σχετικά</a>
           <a href="#management">Διαχείριση</a>
           <a href="#schedule">Αγώνες</a>
+          <a href="#betting">Στοίχημα €</a>
           <a href="#chat">Chat</a>
         </div>
       </nav>
@@ -33,7 +34,7 @@
           <p class="league">Basket League Pro</p>
           <h1>HotHeroes <span>vs</span> Ιπτάμενοι</h1>
           <p class="subtitle">Τα δεδομένα συγχρονίζονται πλέον ζωντανά μέσω Firebase Cloud.</p>
-          <a class="btn-primary" href="#management">Πρόσθεσε μέλη & αγώνες</a>
+          <a class="btn-primary" href="#betting">Παίξε στοίχημα στον επόμενο αγώνα</a>
         </div>
 
         <div class="team-card iptamenoi">
@@ -49,7 +50,7 @@
       <section class="section container" id="about">
         <div class="section-heading">
           <h2>Η πλατφόρμα των δύο ομάδων</h2>
-          <p>Διαχείριση συνθέσεων και αγώνων σε πραγματικό χρόνο.</p>
+          <p>Διαχείριση συνθέσεων, live αποτελεσμάτων και στοιχηματισμού σε πραγματικό χρόνο.</p>
         </div>
       </section>
 
@@ -97,20 +98,54 @@
         <div class="container">
           <div class="section-heading">
             <h2>Πρόγραμμα Αγώνων</h2>
-            <tbody id="matches-body"></tbody>
-            <table class="schedule-table">
-              <thead>
-                <tr>
-                  <th>Ημερομηνία</th><th>Ώρα</th><th>Γήπεδο</th><th>Matchup</th><th>Σκορ</th><th>Κατάσταση</th>
-                </tr>
-              </thead>
-              <tbody id="matches-body"></tbody>
-            </table>
+            <div class="schedule-table-wrapper">
+              <table class="schedule-table">
+                <thead>
+                  <tr>
+                    <th>Ημερομηνία</th><th>Ώρα</th><th>Γήπεδο</th><th>Matchup</th><th>Σκορ</th><th>Κατάσταση</th>
+                  </tr>
+                </thead>
+                <tbody id="matches-body"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="section section-alt" id="chat">
+      <section class="section section-alt" id="betting">
+        <div class="container">
+          <div class="section-heading">
+            <h2>Στοιχηματικό κέντρο (€)</h2>
+            <p>Τοποθέτησε πρόβλεψη ανά αγώνα. Στα κερδισμένα στοιχήματα η πληρωμή είναι 2.00x.</p>
+          </div>
+
+          <div class="betting-grid">
+            <article class="panel-card">
+              <h3>Νέο στοίχημα</h3>
+              <form id="bet-form" class="stack-form">
+                <label>Αγώνας <select id="bet-match-select" required></select></label>
+                <label>Όνομα παίκτη <input id="bettor-name" type="text" maxlength="30" required placeholder="π.χ. Maria7" /></label>
+                <label>Πρόβλεψη νικητή
+                  <select id="bet-winner" required>
+                    <option value="HotHeroes">HotHeroes</option>
+                    <option value="Ιπτάμενοι">Ιπτάμενοι</option>
+                  </select>
+                </label>
+                <label>Ποσό σε € <input id="bet-amount" type="number" min="1" step="1" required placeholder="π.χ. 15" /></label>
+                <button class="btn-primary" type="submit">Καταχώρηση στοιχήματος</button>
+              </form>
+            </article>
+
+            <article class="bets-board">
+              <h3>Live Στοιχήματα</h3>
+              <p>Οι καταστάσεις ενημερώνονται αυτόματα μόλις ολοκληρωθεί ο αγώνας.</p>
+              <ul id="bets-list" class="bets-list"></ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="chat">
         <div class="container chat-layout">
           <div>
             <div class="section-heading left-align">
@@ -144,7 +179,6 @@
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    
     <script src="script.js"></script>
   </body>
 </html>
