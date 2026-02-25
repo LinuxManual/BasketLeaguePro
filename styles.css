@@ -283,6 +283,80 @@ select {
   color: var(--ok);
 }
 
+
+
+.bet-pending {
+  background: rgba(57, 182, 255, 0.2);
+  color: var(--accent-2);
+}
+
+.bet-won {
+  background: rgba(47, 212, 122, 0.2);
+  color: var(--ok);
+}
+
+.bet-lost {
+  background: rgba(255, 92, 57, 0.22);
+  color: #ff937b;
+}
+
+.bet-refund {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+
+
+.betting-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.bets-board {
+  margin-top: 24px;
+  background: rgba(21, 27, 45, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+
+.bets-board h3 {
+  margin-top: 0;
+}
+
+.bets-board p {
+  color: var(--muted);
+}
+
+.bets-list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.bet-item {
+  background: var(--panel-2);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.bet-item p {
+  margin: 4px 0;
+  color: var(--text);
+}
+
+.bet-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -418,6 +492,7 @@ textarea {
   .features-grid,
   .stats-grid,
   .management-grid,
+  .betting-grid,
   .chat-layout {
     grid-template-columns: 1fr;
   }

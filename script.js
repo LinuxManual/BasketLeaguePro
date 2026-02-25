@@ -1,4 +1,4 @@
-// 1. Firebase Configuration (Χρησιμοποιώ τα στοιχεία που μου έδωσες)
+// 1. Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBm5k1wF7-RaC8hEtTy2Phznxey0FnAcsU",
   authDomain: "basket-clash-7901c.firebaseapp.com",
@@ -9,7 +9,6 @@ const firebaseConfig = {
   measurementId: "G-SDPWG5QT2N"
 };
 
-// Αρχικοποίηση Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -17,38 +16,47 @@ const db = firebase.firestore();
 const playerForm = document.getElementById("player-form");
 const matchForm = document.getElementById("match-form");
 const scoreForm = document.getElementById("score-form");
+const betForm = document.getElementById("bet-form");
+const chatForm = document.getElementById("chat-form");
+
 const hotHeroesList = document.getElementById("hotheroes-list");
 const iptamenoiList = document.getElementById("iptamenoi-list");
 const matchesBody = document.getElementById("matches-body");
 const matchSelect = document.getElementById("match-select");
-const chatForm = document.getElementById("chat-form");
+const betMatchSelect = document.getElementById("bet-match-select");
+const betsList = document.getElementById("bets-list");
 const chatMessages = document.getElementById("chat-messages");
 const clearButton = document.getElementById("clear-chat");
 
-// --- 3. LIVE LISTENERS (Αυτόματη ενημέρωση από το Cloud) ---
+const appState = {
+  matches: [],
+  bets: []
+};
 
-// Παρακολούθηση Ρόστερ (Ομάδες)
+// 3. LIVE LISTENERS
+
 db.collection("siteData").doc("rosters").onSnapshot((doc) => {
-  if (doc.exists) {
-    const data = doc.data();
-    renderRoster(hotHeroesList, data.HotHeroes || []);
-    renderRoster(iptamenoiList, data.Ιπτάμενοι || []);
-  } else {
-    renderRoster(hotHeroesList, []);
-    renderRoster(iptamenoiList, []);
-  }
+  const data = doc.exists ? doc.data() : {};
+  renderRoster(hotHeroesList, data.HotHeroes || []);
+  renderRoster(iptamenoiList, data.Ιπτάμενοι || []);
 });
 
-// Παρακολούθηση Αγώνων
 db.collection("matches").orderBy("date").onSnapshot((snapshot) => {
-  const matches = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  renderMatches(matches);
-  renderMatchSelect(matches);
+  appState.matches = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  renderMatches(appState.matches);
+  renderMatchSelect(matchSelect, appState.matches);
+  renderMatchSelect(betMatchSelect, appState.matches);
+  renderBets(appState.bets, appState.matches);
 });
 
-// Παρακολούθηση Chat (Real-time)
+db.collection("bets").orderBy("createdAt", "desc").limit(100).onSnapshot((snapshot) => {
+  appState.bets = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  renderBets(appState.bets, appState.matches);
+});
+
 db.collection("messages").orderBy("createdAt", "desc").limit(50).onSnapshot((snapshot) => {
   chatMessages.innerHTML = "";
+
   if (snapshot.empty) {
     const emptyState = document.createElement("li");
     emptyState.className = "chat-item";
@@ -56,23 +64,26 @@ db.collection("messages").orderBy("createdAt", "desc").limit(50).onSnapshot((sna
     chatMessages.append(emptyState);
     return;
   }
-  snapshot.forEach(doc => {
+
+  snapshot.forEach((doc) => {
     const msg = doc.data();
     const time = msg.createdAt ? msg.createdAt.toDate() : new Date();
     chatMessages.appendChild(createMessageElement(msg.user, msg.text, time));
   });
 });
 
-// --- 4. ΣΥΝΑΡΤΗΣΕΙΣ RENDER (Οπτικοποίηση) ---
+// 4. Render helpers
 
 function renderRoster(listElement, players) {
   listElement.innerHTML = "";
+
   if (!players.length) {
     const li = document.createElement("li");
     li.textContent = "Δεν έχουν οριστεί ακόμα μέλη.";
     listElement.append(li);
     return;
   }
+
   players.forEach((name) => {
     const li = document.createElement("li");
     li.textContent = name;
@@ -80,55 +91,156 @@ function renderRoster(listElement, players) {
   });
 }
 
+function formatMatchDate(rawDate) {
+  const parsed = new Date(rawDate);
+  return Number.isNaN(parsed.getTime()) ? rawDate : parsed.toLocaleDateString("el-GR");
+}
+
 function renderMatches(matches) {
   matchesBody.innerHTML = "";
+
   if (!matches.length) {
     const row = document.createElement("tr");
-    row.innerHTML = '<td colspan="6">Δεν υπάρχουν αγώνες ακόμα.</td>';
+    const cell = document.createElement("td");
+    cell.colSpan = 6;
+    cell.textContent = "Δεν υπάρχουν αγώνες ακόμα.";
+    row.append(cell);
     matchesBody.append(row);
     return;
   }
+
   matches.forEach((match) => {
     const row = document.createElement("tr");
-    const hasScore = match.hotScore !== null && match.flyScore !== null;
-    row.innerHTML = `
-      <td>${new Date(match.date).toLocaleDateString("el-GR")}</td>
-      <td>${match.time}</td>
-      <td>${match.court}</td>
-      <td>HotHeroes vs Ιπτάμενοι</td>
-      <td>${hasScore ? `${match.hotScore} - ${match.flyScore}` : "-"}</td>
-      <td><span class="status ${hasScore ? "done" : "upcoming"}">${hasScore ? "Completed" : "Upcoming"}</span></td>
-    `;
+    const hasScore = Number.isInteger(match.hotScore) && Number.isInteger(match.flyScore);
+
+    const dateCell = document.createElement("td");
+    dateCell.textContent = formatMatchDate(match.date);
+
+    const timeCell = document.createElement("td");
+    timeCell.textContent = match.time || "-";
+
+    const courtCell = document.createElement("td");
+    courtCell.textContent = match.court || "-";
+
+    const matchupCell = document.createElement("td");
+    matchupCell.textContent = "HotHeroes vs Ιπτάμενοι";
+
+    const scoreCell = document.createElement("td");
+    scoreCell.textContent = hasScore ? `${match.hotScore} - ${match.flyScore}` : "-";
+
+    const statusCell = document.createElement("td");
+    const badge = document.createElement("span");
+    badge.className = `status ${hasScore ? "done" : "upcoming"}`;
+    badge.textContent = hasScore ? "Completed" : "Upcoming";
+    statusCell.append(badge);
+
+    row.append(dateCell, timeCell, courtCell, matchupCell, scoreCell, statusCell);
     matchesBody.append(row);
   });
 }
 
-function renderMatchSelect(matches) {
-  matchSelect.innerHTML = '<option value="">Επίλεξε αγώνα...</option>';
+function renderMatchSelect(selectElement, matches) {
+  selectElement.innerHTML = '<option value="">Επίλεξε αγώνα...</option>';
   matches.forEach((match) => {
     const option = document.createElement("option");
     option.value = match.id;
     option.textContent = `${match.date} ${match.time} • ${match.court}`;
-    matchSelect.append(option);
+    selectElement.append(option);
+  });
+}
+
+function getBetStatus(match, bet) {
+  const hasScore = match && Number.isInteger(match.hotScore) && Number.isInteger(match.flyScore);
+  if (!hasScore) {
+    return { label: "Σε αναμονή", className: "bet-pending", payout: null };
+  }
+
+  if (match.hotScore === match.flyScore) {
+    return {
+      label: "Επιστροφή",
+      className: "bet-refund",
+      payout: Number(bet.amount || 0).toFixed(2)
+    };
+  }
+
+  const winner = match.hotScore > match.flyScore ? "HotHeroes" : "Ιπτάμενοι";
+  const isWinner = bet.winner === winner;
+
+  return {
+    label: isWinner ? "Κέρδισε" : "Χάθηκε",
+    className: isWinner ? "bet-won" : "bet-lost",
+    payout: isWinner ? (Number(bet.amount || 0) * 2).toFixed(2) : "0.00"
+  };
+}
+
+function renderBets(bets, matches) {
+  betsList.innerHTML = "";
+
+  if (!bets.length) {
+    const item = document.createElement("li");
+    item.className = "bet-item";
+    item.textContent = "Δεν υπάρχουν στοιχήματα ακόμα.";
+    betsList.append(item);
+    return;
+  }
+
+  const matchesMap = new Map(matches.map((match) => [match.id, match]));
+
+  bets.forEach((bet) => {
+    const item = document.createElement("li");
+    const relatedMatch = matchesMap.get(bet.matchId);
+    const status = getBetStatus(relatedMatch, bet);
+    const amount = Number(bet.amount || 0).toFixed(2);
+
+    item.className = "bet-item";
+
+    const row = document.createElement("div");
+    row.className = "bet-row";
+
+    const name = document.createElement("strong");
+    name.textContent = bet.bettor || "Παίκτης";
+
+    const statusBadge = document.createElement("span");
+    statusBadge.className = `status ${status.className}`;
+    statusBadge.textContent = status.label;
+
+    row.append(name, statusBadge);
+
+    const prediction = document.createElement("p");
+    prediction.textContent = `Πρόβλεψη: ${bet.winner || "-"} • Ποντάρισμα: €${amount}`;
+
+    const payout = document.createElement("p");
+    payout.textContent = status.payout === null ? "Περιμένει σκορ." : `Πληρωμή: €${status.payout}`;
+
+    item.append(row, prediction, payout);
+    betsList.append(item);
   });
 }
 
 function createMessageElement(user, text, date) {
   const item = document.createElement("li");
   item.className = "chat-item";
-  item.innerHTML = `
-    <div class="chat-item-header">
-      <strong>${user}</strong>
-      <time>${date.toLocaleTimeString("el-GR", { hour: '2-digit', minute: '2-digit' })}</time>
-    </div>
-    <p>${text}</p>
-  `;
+
+  const header = document.createElement("div");
+  header.className = "chat-item-header";
+
+  const username = document.createElement("strong");
+  username.textContent = user;
+
+  const time = document.createElement("time");
+  time.textContent = date.toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" });
+
+  header.append(username, time);
+
+  const message = document.createElement("p");
+  message.textContent = text;
+
+  item.append(header, message);
   return item;
 }
 
-// --- 5. EVENT LISTENERS (Αποστολή Δεδομένων στη Database) ---
+// 5. Form events
 
-// Προσθήκη Παίκτη
 playerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const team = document.getElementById("team-select").value;
@@ -136,19 +248,23 @@ playerForm.addEventListener("submit", async (event) => {
   const name = playerNameInput.value.trim();
   if (!name) return;
 
-  await db.collection("siteData").doc("rosters").set({
-    [team]: firebase.firestore.FieldValue.arrayUnion(name)
-  }, { merge: true });
+  await db.collection("siteData").doc("rosters").set(
+    {
+      [team]: firebase.firestore.FieldValue.arrayUnion(name)
+    },
+    { merge: true }
+  );
 
   playerNameInput.value = "";
 });
 
-// Δημιουργία Αγώνα
 matchForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const date = document.getElementById("match-date").value;
   const time = document.getElementById("match-time").value;
   const court = document.getElementById("match-court").value.trim();
+
+  if (!date || !time || !court) return;
 
   await db.collection("matches").add({
     date,
@@ -161,24 +277,43 @@ matchForm.addEventListener("submit", async (event) => {
   matchForm.reset();
 });
 
-// Καταχώρηση Σκορ
 scoreForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const matchId = matchSelect.value;
-  const hotScore = parseInt(document.getElementById("score-hot").value);
-  const flyScore = parseInt(document.getElementById("score-fly").value);
+  const hotScore = parseInt(document.getElementById("score-hot").value, 10);
+  const flyScore = parseInt(document.getElementById("score-fly").value, 10);
 
-  if (!matchId) return;
+  if (!matchId || Number.isNaN(hotScore) || Number.isNaN(flyScore)) return;
 
   await db.collection("matches").doc(matchId).update({
-    hotScore: hotScore,
-    flyScore: flyScore
+    hotScore,
+    flyScore
   });
 
   scoreForm.reset();
 });
 
-// Αποστολή Μηνύματος στο Chat
+betForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const matchId = betMatchSelect.value;
+  const bettor = document.getElementById("bettor-name").value.trim();
+  const winner = document.getElementById("bet-winner").value;
+  const amount = parseInt(document.getElementById("bet-amount").value, 10);
+
+  if (!matchId || !bettor || Number.isNaN(amount) || amount < 1) return;
+
+  await db.collection("bets").add({
+    matchId,
+    bettor,
+    winner,
+    amount,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  betForm.reset();
+});
+
 chatForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const user = document.getElementById("username").value.trim();
@@ -195,7 +330,6 @@ chatForm.addEventListener("submit", async (event) => {
   document.getElementById("message").value = "";
 });
 
-// Καθαρισμός Chat (Προσοχή: Διαγράφει τα μηνύματα από τη βάση!)
 clearButton.addEventListener("click", async () => {
   const snapshot = await db.collection("messages").get();
   const batch = db.batch();
