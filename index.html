@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=20260224" />
+    <link rel="stylesheet" href="./styles.css?v=20260225" />
   </head>
   <body>
     <header class="hero" id="top">
@@ -20,6 +20,7 @@
           <a href="#about">Σχετικά</a>
           <a href="#management">Διαχείριση</a>
           <a href="#schedule">Αγώνες</a>
+          <a href="#betting">Betting</a>
           <a href="#insights">Insights</a>
           <a href="#chat">Chat</a>
         </div>
@@ -122,6 +123,33 @@
               <button class="btn-primary" type="submit">Αποθήκευση σκορ</button>
             </form>
           </article>
+
+          <article class="panel-card">
+            <h3>Νέο στοίχημα</h3>
+            <form id="bet-form" class="stack-form">
+              <label>
+                Αγώνας
+                <select id="bet-match-select" required></select>
+              </label>
+              <label>
+                Όνομα παίκτη
+                <input id="bet-user" type="text" maxlength="24" required placeholder="π.χ. KostasBets" />
+              </label>
+              <label>
+                Πρόβλεψη HotHeroes
+                <input id="bet-hot" type="number" min="0" required />
+              </label>
+              <label>
+                Πρόβλεψη Ιπτάμενοι
+                <input id="bet-fly" type="number" min="0" required />
+              </label>
+              <label>
+                Ποντάρισμα (€)
+                <input id="bet-stake" type="number" min="1" step="0.5" required placeholder="π.χ. 10.5" />
+              </label>
+              <button class="btn-primary" type="submit">Καταχώρηση στοιχήματος</button>
+            </form>
+          </article>
         </div>
       </section>
 
@@ -144,6 +172,29 @@
                 </tr>
               </thead>
               <tbody id="matches-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-alt" id="betting">
+        <div class="container">
+          <div class="section-heading">
+            <h2>Betting Center</h2>
+            <p>Δες όλα τα στοιχήματα για κάθε αγώνα και τα αποτελέσματά τους.</p>
+          </div>
+          <div class="schedule-table-wrapper">
+            <table class="schedule-table betting-table">
+              <thead>
+                <tr>
+                  <th>Αγώνας</th>
+                  <th>Παίκτης</th>
+                  <th>Πρόβλεψη</th>
+                  <th>Ποντάρισμα (€)</th>
+                  <th>Κατάσταση</th>
+                </tr>
+              </thead>
+              <tbody id="bets-body"></tbody>
             </table>
           </div>
         </div>
@@ -242,6 +293,6 @@
     <script>
       window.CHAT_RESET_PASSWORD = window.CHAT_RESET_PASSWORD || "HotHeroes2026!";
     </script>
-    <script type="module" src="./script.js?v=20260224"></script>
+    <script type="module" src="./script.js?v=20260225"></script>
   </body>
 </html>

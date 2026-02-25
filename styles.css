@@ -249,7 +249,7 @@ hr {
 
 .management-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 20px;
 }
 
@@ -325,6 +325,11 @@ select {
 .done {
   background: rgba(47, 212, 122, 0.2);
   color: var(--ok);
+}
+
+.lost {
+  background: rgba(255, 92, 57, 0.2);
+  color: var(--accent);
 }
 
 .stats-grid {
