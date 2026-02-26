@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=20260227" />
+    <link rel="stylesheet" href="./styles.css?v=20260228" />
   </head>
   <body>
     <header class="hero" id="top">
@@ -37,7 +37,8 @@
         <div class="ranking-heading compact">
           <p class="league">Top Players • Combined Teams</p>
           <h2>Power Ranking HotHeroes + Ιπτάμενοι</h2>
-          <p>Ρύθμισε πόσο μετράει κάθε στατιστικό για το live ranking.</p>
+          <p>Ρύθμισε πόσο μετράει κάθε στατιστικό για το live ranking και δες άμεσα τις αλλαγές.</p>
+          <p id="ranking-live-note" class="ranking-live-note">Live ranking ενεργό • αλλαγές σε shots/assists/rebounds/blocks εφαρμόζονται άμεσα.</p>
         </div>
         <form id="ranking-weights-form" class="ranking-weights">
           <label>Shot pts
@@ -54,6 +55,25 @@
           </label>
         </form>
         <ol id="ranking-list" class="ranking-list"></ol>
+        <div class="ranking-stats-panel">
+          <h3>Σύνοψη στατιστικών παικτών</h3>
+          <div class="schedule-table-wrapper">
+            <table class="schedule-table ranking-stats-table">
+              <thead>
+                <tr>
+                  <th>Παίκτης</th>
+                  <th>Ομάδα</th>
+                  <th>Shots</th>
+                  <th>Assists</th>
+                  <th>Rebounds</th>
+                  <th>Blocks</th>
+                  <th>Σύνολο Πόντων Rank</th>
+                </tr>
+              </thead>
+              <tbody id="ranking-stats-body"></tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
       <div class="hero-content container">
@@ -350,6 +370,6 @@
     <script>
       window.CHAT_RESET_PASSWORD = window.CHAT_RESET_PASSWORD || "HotHeroes2026!";
     </script>
-    <script type="module" src="./script.js?v=20260227"></script>
+    <script type="module" src="./script.js?v=20260228"></script>
   </body>
 </html>

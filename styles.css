@@ -186,6 +186,34 @@ body {
   color: var(--text);
 }
 
+.ranking-live-note {
+  margin-top: 6px;
+  color: #f3f6ff;
+  font-size: 0.82rem;
+  opacity: 0.9;
+}
+
+.ranking-stats-panel {
+  margin-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 10px;
+}
+
+.ranking-stats-panel h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+.ranking-stats-table {
+  min-width: 640px;
+}
+
+.ranking-stats-table th,
+.ranking-stats-table td {
+  padding: 10px;
+  font-size: 0.86rem;
+}
+
 .panel-card,
 .team-card,
 .versus,

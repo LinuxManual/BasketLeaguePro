@@ -48,6 +48,7 @@ const clearButton = document.getElementById("clear-chat");
 const connectionStatus = document.getElementById("connection-status");
 const rankingList = document.getElementById("ranking-list");
 const rankingWeightsForm = document.getElementById("ranking-weights-form");
+const rankingStatsBody = document.getElementById("ranking-stats-body");
 const weightShots = document.getElementById("weight-shots");
 const weightAssists = document.getElementById("weight-assists");
 const weightRebounds = document.getElementById("weight-rebounds");
@@ -276,17 +277,22 @@ function createMessageElement(message) {
 }
 
 
-function calculatePlayerRankings() {
-  const completedMatches = state.matches.filter((m) => Number.isInteger(m.hotScore) && Number.isInteger(m.flyScore));
-  const hotWins = completedMatches.filter((m) => m.hotScore > m.flyScore).length;
-  const flyWins = completedMatches.filter((m) => m.flyScore > m.hotScore).length;
 
-  const weights = {
+function calculateWeights() {
+  return {
     shots: Math.max(0, Number.parseInt(weightShots.value, 10) || 0),
     assists: Math.max(0, Number.parseInt(weightAssists.value, 10) || 0),
     rebounds: Math.max(0, Number.parseInt(weightRebounds.value, 10) || 0),
     blocks: Math.max(0, Number.parseInt(weightBlocks.value, 10) || 0)
   };
+}
+
+function calculatePlayerRankings() {
+  const completedMatches = state.matches.filter((m) => Number.isInteger(m.hotScore) && Number.isInteger(m.flyScore));
+  const hotWins = completedMatches.filter((m) => m.hotScore > m.flyScore).length;
+  const flyWins = completedMatches.filter((m) => m.flyScore > m.hotScore).length;
+
+  const weights = calculateWeights();
 
   const statsByPlayer = new Map(state.playerStats.map((p) => [`${p.team}::${p.name}`, p]));
   const allPlayers = [
@@ -310,6 +316,31 @@ function calculatePlayerRankings() {
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, "el"));
 }
 
+
+function renderRankingStatsTable(ranking) {
+  rankingStatsBody.innerHTML = "";
+  if (!ranking.length) {
+    const row = document.createElement("tr");
+    row.innerHTML = '<td colspan="7">Δεν υπάρχουν στατιστικά ακόμα.</td>';
+    rankingStatsBody.append(row);
+    return;
+  }
+
+  ranking.forEach((player) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${player.name}</td>
+      <td>${player.team}</td>
+      <td>${player.stats.shots}</td>
+      <td>${player.stats.assists}</td>
+      <td>${player.stats.rebounds}</td>
+      <td>${player.stats.blocks}</td>
+      <td>${player.score}</td>
+    `;
+    rankingStatsBody.append(row);
+  });
+}
+
 function renderRankings() {
   rankingList.innerHTML = "";
   const ranking = calculatePlayerRankings();
@@ -319,6 +350,7 @@ function renderRankings() {
     empty.className = "ranking-item";
     empty.innerHTML = '<span class="rank-player"><strong>Δεν υπάρχουν παίκτες ακόμα</strong><span>Πρόσθεσε μέλη από το panel διαχείρισης για να εμφανιστεί η κατάταξη.</span></span>';
     rankingList.append(empty);
+    renderRankingStatsTable([]);
     return;
   }
 
@@ -335,6 +367,8 @@ function renderRankings() {
     `;
     rankingList.append(item);
   });
+
+  renderRankingStatsTable(ranking);
 }
 
 function renderMessages(messages) {
