@@ -10,13 +10,14 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=20260225" />
+    <link rel="stylesheet" href="./styles.css?v=20260227" />
   </head>
   <body>
     <header class="hero" id="top">
       <nav class="nav container">
         <a class="brand" href="#top">Basket Clash</a>
         <div class="nav-links">
+          <a href="#ranking">Rankings</a>
           <a href="#about">Σχετικά</a>
           <a href="#management">Διαχείριση</a>
           <a href="#schedule">Αγώνες</a>
@@ -25,6 +26,35 @@
           <a href="#chat">Chat</a>
         </div>
       </nav>
+
+      <div class="container hero-top-strip">
+        <div class="hero-pill">🏀 Live Rivalry Dashboard</div>
+        <div class="hero-pill">⚡ Smart Player Rankings</div>
+        <div class="hero-pill">🔥 Real-time community updates</div>
+      </div>
+
+      <section class="container ranking-showcase" id="ranking">
+        <div class="ranking-heading compact">
+          <p class="league">Top Players • Combined Teams</p>
+          <h2>Power Ranking HotHeroes + Ιπτάμενοι</h2>
+          <p>Ρύθμισε πόσο μετράει κάθε στατιστικό για το live ranking.</p>
+        </div>
+        <form id="ranking-weights-form" class="ranking-weights">
+          <label>Shot pts
+            <input id="weight-shots" type="number" value="2" min="0" step="1" />
+          </label>
+          <label>Assist pts
+            <input id="weight-assists" type="number" value="3" min="0" step="1" />
+          </label>
+          <label>Rebound pts
+            <input id="weight-rebounds" type="number" value="2" min="0" step="1" />
+          </label>
+          <label>Block pts
+            <input id="weight-blocks" type="number" value="4" min="0" step="1" />
+          </label>
+        </form>
+        <ol id="ranking-list" class="ranking-list"></ol>
+      </section>
 
       <div class="hero-content container">
         <div class="team-card hotheroes">
@@ -83,6 +113,33 @@
                 <input id="player-name" type="text" maxlength="40" required placeholder="π.χ. Γιάννης Π." />
               </label>
               <button class="btn-primary" type="submit">Προσθήκη</button>
+            </form>
+          </article>
+
+          <article class="panel-card">
+            <h3>Στατιστικά παίκτη</h3>
+            <form id="player-stats-form" class="stack-form">
+              <label>
+                Παίκτης
+                <select id="stats-player-select" required></select>
+              </label>
+              <label>
+                Shots
+                <input id="stats-shots" type="number" min="0" value="0" required />
+              </label>
+              <label>
+                Assists
+                <input id="stats-assists" type="number" min="0" value="0" required />
+              </label>
+              <label>
+                Rebounds
+                <input id="stats-rebounds" type="number" min="0" value="0" required />
+              </label>
+              <label>
+                Blocks
+                <input id="stats-blocks" type="number" min="0" value="0" required />
+              </label>
+              <button class="btn-primary" type="submit">Ενημέρωση stats</button>
             </form>
           </article>
 
@@ -293,6 +350,6 @@
     <script>
       window.CHAT_RESET_PASSWORD = window.CHAT_RESET_PASSWORD || "HotHeroes2026!";
     </script>
-    <script type="module" src="./script.js?v=20260225"></script>
+    <script type="module" src="./script.js?v=20260227"></script>
   </body>
 </html>
