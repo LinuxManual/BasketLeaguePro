@@ -84,7 +84,7 @@ body {
   margin-top: 28px;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .hero-pill {
@@ -97,8 +97,9 @@ body {
 }
 
 .ranking-showcase {
-  margin-top: 28px;
-  padding: 26px;
+  margin: 22px auto 0;
+  padding: 16px;
+  max-width: 760px;
   border-radius: var(--radius);
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: linear-gradient(120deg, rgba(255, 92, 57, 0.11), rgba(57, 182, 255, 0.12));
@@ -115,7 +116,7 @@ body {
 }
 
 .ranking-list {
-  margin: 18px 0 0;
+  margin: 12px 0 0;
   padding: 0;
   list-style: none;
   display: grid;
@@ -126,16 +127,16 @@ body {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 14px;
-  padding: 12px 14px;
+  gap: 10px;
+  padding: 9px 11px;
   border-radius: 14px;
   background: rgba(9, 14, 26, 0.76);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .rank-number {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -160,6 +161,74 @@ body {
 .rank-score {
   font-weight: 800;
   color: #f7f9ff;
+}
+
+
+.ranking-weights {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ranking-weights label {
+  display: grid;
+  gap: 4px;
+  color: #d3dcfc;
+  font-size: 0.78rem;
+}
+
+.ranking-weights input {
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #0f1525;
+  color: var(--text);
+}
+
+.ranking-live-note {
+  margin-top: 6px;
+  color: #f3f6ff;
+  font-size: 0.82rem;
+  opacity: 0.9;
+}
+
+.ranking-stats-panel {
+  margin-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 10px;
+}
+
+.ranking-stats-panel h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+.ranking-stats-table {
+  min-width: 640px;
+}
+
+.ranking-stats-table th,
+.ranking-stats-table td {
+  padding: 10px;
+  font-size: 0.86rem;
+}
+
+.panel-card,
+.team-card,
+.versus,
+.chat-panel,
+.chat-form {
+  transition: transform 0.22s ease, border-color 0.22s ease;
+}
+
+.panel-card:hover,
+.team-card:hover,
+.versus:hover,
+.chat-panel:hover,
+.chat-form:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
 .hero-content {
@@ -348,7 +417,7 @@ hr {
 
 .management-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 20px;
 }
 
@@ -575,7 +644,11 @@ textarea {
   }
 
   .ranking-showcase {
-    padding: 18px;
+    padding: 14px;
+  }
+
+  .ranking-weights {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .hero-content,

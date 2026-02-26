@@ -12,7 +12,8 @@ import {
   orderBy,
   getDocs,
   writeBatch,
-  arrayUnion
+  arrayUnion,
+  increment
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const LOCKED_USERNAME_KEY = "basketleaguepro-locked-username";
@@ -21,7 +22,8 @@ const state = {
   rosters: { HotHeroes: [], "Ιπτάμενοι": [] },
   matches: [],
   messages: [],
-  bets: []
+  bets: [],
+  playerStats: []
 };
 
 const playerForm = document.getElementById("player-form");
@@ -34,6 +36,8 @@ const matchSelect = document.getElementById("match-select");
 const betForm = document.getElementById("bet-form");
 const betMatchSelect = document.getElementById("bet-match-select");
 const betsBody = document.getElementById("bets-body");
+const playerStatsForm = document.getElementById("player-stats-form");
+const statsPlayerSelect = document.getElementById("stats-player-select");
 const chatForm = document.getElementById("chat-form");
 const usernameInput = document.getElementById("username");
 const messageInput = document.getElementById("message");
@@ -43,6 +47,12 @@ const chatMessages = document.getElementById("chat-messages");
 const clearButton = document.getElementById("clear-chat");
 const connectionStatus = document.getElementById("connection-status");
 const rankingList = document.getElementById("ranking-list");
+const rankingWeightsForm = document.getElementById("ranking-weights-form");
+const rankingStatsBody = document.getElementById("ranking-stats-body");
+const weightShots = document.getElementById("weight-shots");
+const weightAssists = document.getElementById("weight-assists");
+const weightRebounds = document.getElementById("weight-rebounds");
+const weightBlocks = document.getElementById("weight-blocks");
 
 const insTotal = document.getElementById("ins-total");
 const insHotWins = document.getElementById("ins-hot-wins");
@@ -98,6 +108,7 @@ const rostersRef = doc(db, "basketLeaguePro", "rosters");
 const matchesRef = collection(db, "basketLeaguePro", "matches", "items");
 const messagesRef = collection(db, "basketLeaguePro", "messages", "items");
 const betsRef = collection(db, "basketLeaguePro", "bets", "items");
+const playerStatsRef = collection(db, "basketLeaguePro", "playerStats", "items");
 
 function formatDate(dateValue) {
   return new Date(`${dateValue}T00:00:00`).toLocaleDateString("el-GR");
@@ -161,6 +172,30 @@ function renderMatchSelect(matches) {
     option.textContent = `${formatDate(match.date)} ${match.time} • ${match.court}`;
     matchSelect.append(option);
     betMatchSelect.append(option.cloneNode(true));
+  });
+}
+
+
+function renderPlayerStatsSelect() {
+  statsPlayerSelect.innerHTML = "";
+  const allPlayers = [
+    ...state.rosters.HotHeroes.map((name) => ({ name, team: "HotHeroes" })),
+    ...state.rosters["Ιπτάμενοι"].map((name) => ({ name, team: "Ιπτάμενοι" }))
+  ].sort((a, b) => a.name.localeCompare(b.name, "el"));
+
+  if (!allPlayers.length) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "Πρώτα πρόσθεσε μέλη";
+    statsPlayerSelect.append(option);
+    return;
+  }
+
+  allPlayers.forEach((player) => {
+    const option = document.createElement("option");
+    option.value = `${player.team}::${player.name}`;
+    option.textContent = `${player.name} • ${player.team}`;
+    statsPlayerSelect.append(option);
   });
 }
 
@@ -242,11 +277,24 @@ function createMessageElement(message) {
 }
 
 
+
+function calculateWeights() {
+  return {
+    shots: Math.max(0, Number.parseInt(weightShots.value, 10) || 0),
+    assists: Math.max(0, Number.parseInt(weightAssists.value, 10) || 0),
+    rebounds: Math.max(0, Number.parseInt(weightRebounds.value, 10) || 0),
+    blocks: Math.max(0, Number.parseInt(weightBlocks.value, 10) || 0)
+  };
+}
+
 function calculatePlayerRankings() {
   const completedMatches = state.matches.filter((m) => Number.isInteger(m.hotScore) && Number.isInteger(m.flyScore));
   const hotWins = completedMatches.filter((m) => m.hotScore > m.flyScore).length;
   const flyWins = completedMatches.filter((m) => m.flyScore > m.hotScore).length;
 
+  const weights = calculateWeights();
+
+  const statsByPlayer = new Map(state.playerStats.map((p) => [`${p.team}::${p.name}`, p]));
   const allPlayers = [
     ...state.rosters.HotHeroes.map((name) => ({ name, team: "HotHeroes" })),
     ...state.rosters["Ιπτάμενοι"].map((name) => ({ name, team: "Ιπτάμενοι" }))
@@ -254,15 +302,43 @@ function calculatePlayerRankings() {
 
   return allPlayers
     .map((player) => {
+      const playerStats = statsByPlayer.get(`${player.team}::${player.name}`) || { shots: 0, assists: 0, rebounds: 0, blocks: 0 };
       const teamWins = player.team === "HotHeroes" ? hotWins : flyWins;
-      const base = 50;
-      const formScore = teamWins * 12;
-      const activityScore = completedMatches.length * 4;
-      const consistencyBoost = Math.max(0, 12 - Math.abs(hotWins - flyWins) * 2);
-      const totalScore = base + formScore + activityScore + consistencyBoost;
-      return { ...player, score: totalScore };
+      const baseScore = 30 + teamWins * 3;
+      const statsScore =
+        playerStats.shots * weights.shots +
+        playerStats.assists * weights.assists +
+        playerStats.rebounds * weights.rebounds +
+        playerStats.blocks * weights.blocks;
+      const totalScore = baseScore + statsScore;
+      return { ...player, score: totalScore, stats: playerStats };
     })
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, "el"));
+}
+
+
+function renderRankingStatsTable(ranking) {
+  rankingStatsBody.innerHTML = "";
+  if (!ranking.length) {
+    const row = document.createElement("tr");
+    row.innerHTML = '<td colspan="7">Δεν υπάρχουν στατιστικά ακόμα.</td>';
+    rankingStatsBody.append(row);
+    return;
+  }
+
+  ranking.forEach((player) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${player.name}</td>
+      <td>${player.team}</td>
+      <td>${player.stats.shots}</td>
+      <td>${player.stats.assists}</td>
+      <td>${player.stats.rebounds}</td>
+      <td>${player.stats.blocks}</td>
+      <td>${player.score}</td>
+    `;
+    rankingStatsBody.append(row);
+  });
 }
 
 function renderRankings() {
@@ -274,22 +350,25 @@ function renderRankings() {
     empty.className = "ranking-item";
     empty.innerHTML = '<span class="rank-player"><strong>Δεν υπάρχουν παίκτες ακόμα</strong><span>Πρόσθεσε μέλη από το panel διαχείρισης για να εμφανιστεί η κατάταξη.</span></span>';
     rankingList.append(empty);
+    renderRankingStatsTable([]);
     return;
   }
 
-  ranking.slice(0, 12).forEach((player, index) => {
+  ranking.slice(0, 8).forEach((player, index) => {
     const item = document.createElement("li");
     item.className = `ranking-item ${index < 3 ? "top" : ""}`;
     item.innerHTML = `
       <span class="rank-number">${index + 1}</span>
       <span class="rank-player">
         <strong>${player.name}</strong>
-        <span>${player.team}</span>
+        <span>${player.team} • S:${player.stats.shots} A:${player.stats.assists} R:${player.stats.rebounds} B:${player.stats.blocks}</span>
       </span>
       <span class="rank-score">${player.score} pts</span>
     `;
     rankingList.append(item);
   });
+
+  renderRankingStatsTable(ranking);
 }
 
 function renderMessages(messages) {
@@ -319,13 +398,14 @@ function renderAll() {
   renderRoster(iptamenoiList, state.rosters["Ιπτάμενοι"]);
   renderMatches(orderedMatches);
   renderMatchSelect(orderedMatches);
+  renderPlayerStatsSelect();
   renderBets(orderedMatches, state.bets);
   renderInsights(orderedMatches);
   renderMessages(orderedMessages);
   renderRankings();
 }
 
-let listenersReady = { rosters: false, matches: false, messages: false, bets: false };
+let listenersReady = { rosters: false, matches: false, messages: false, bets: false, playerStats: false };
 function markReady(key) {
   listenersReady[key] = true;
   if (Object.values(listenersReady).every(Boolean)) {
@@ -360,6 +440,12 @@ onSnapshot(query(betsRef, orderBy("createdAt", "desc")), (snap) => {
   markReady("bets");
   renderAll();
 }, (error) => setStatus(`Firebase betting error ❌ (${error.message})`, false));
+
+onSnapshot(playerStatsRef, (snap) => {
+  state.playerStats = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  markReady("playerStats");
+  renderAll();
+}, (error) => setStatus(`Firebase player stats error ❌ (${error.message})`, false));
 
 playerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -410,6 +496,37 @@ betForm.addEventListener("submit", async (event) => {
   await addDoc(betsRef, { matchId, user, predHot, predFly, stake: normalizedStake, createdAt: Date.now() });
   betForm.reset();
 });
+
+
+playerStatsForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const key = statsPlayerSelect.value;
+  const shots = Number.parseInt(document.getElementById("stats-shots").value, 10) || 0;
+  const assists = Number.parseInt(document.getElementById("stats-assists").value, 10) || 0;
+  const rebounds = Number.parseInt(document.getElementById("stats-rebounds").value, 10) || 0;
+  const blocks = Number.parseInt(document.getElementById("stats-blocks").value, 10) || 0;
+  if (!key) return;
+
+  const [team, name] = key.split("::");
+  const existing = state.playerStats.find((item) => item.team === team && item.name === name);
+  if (existing) {
+    await updateDoc(doc(playerStatsRef, existing.id), {
+      shots: increment(shots),
+      assists: increment(assists),
+      rebounds: increment(rebounds),
+      blocks: increment(blocks)
+    });
+  } else {
+    await addDoc(playerStatsRef, { team, name, shots, assists, rebounds, blocks, createdAt: Date.now() });
+  }
+
+  playerStatsForm.reset();
+  ["stats-shots", "stats-assists", "stats-rebounds", "stats-blocks"].forEach((id) => {
+    document.getElementById(id).value = 0;
+  });
+});
+
+rankingWeightsForm.addEventListener("input", () => renderRankings());
 
 chatForm.addEventListener("submit", async (event) => {
   event.preventDefault();
