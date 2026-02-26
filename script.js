@@ -42,6 +42,7 @@ const chatCounter = document.getElementById("chat-counter");
 const chatMessages = document.getElementById("chat-messages");
 const clearButton = document.getElementById("clear-chat");
 const connectionStatus = document.getElementById("connection-status");
+const rankingList = document.getElementById("ranking-list");
 
 const insTotal = document.getElementById("ins-total");
 const insHotWins = document.getElementById("ins-hot-wins");
@@ -240,6 +241,57 @@ function createMessageElement(message) {
   return item;
 }
 
+
+function calculatePlayerRankings() {
+  const completedMatches = state.matches.filter((m) => Number.isInteger(m.hotScore) && Number.isInteger(m.flyScore));
+  const hotWins = completedMatches.filter((m) => m.hotScore > m.flyScore).length;
+  const flyWins = completedMatches.filter((m) => m.flyScore > m.hotScore).length;
+
+  const allPlayers = [
+    ...state.rosters.HotHeroes.map((name) => ({ name, team: "HotHeroes" })),
+    ...state.rosters["Ιπτάμενοι"].map((name) => ({ name, team: "Ιπτάμενοι" }))
+  ];
+
+  return allPlayers
+    .map((player) => {
+      const teamWins = player.team === "HotHeroes" ? hotWins : flyWins;
+      const base = 50;
+      const formScore = teamWins * 12;
+      const activityScore = completedMatches.length * 4;
+      const consistencyBoost = Math.max(0, 12 - Math.abs(hotWins - flyWins) * 2);
+      const totalScore = base + formScore + activityScore + consistencyBoost;
+      return { ...player, score: totalScore };
+    })
+    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, "el"));
+}
+
+function renderRankings() {
+  rankingList.innerHTML = "";
+  const ranking = calculatePlayerRankings();
+
+  if (!ranking.length) {
+    const empty = document.createElement("li");
+    empty.className = "ranking-item";
+    empty.innerHTML = '<span class="rank-player"><strong>Δεν υπάρχουν παίκτες ακόμα</strong><span>Πρόσθεσε μέλη από το panel διαχείρισης για να εμφανιστεί η κατάταξη.</span></span>';
+    rankingList.append(empty);
+    return;
+  }
+
+  ranking.slice(0, 12).forEach((player, index) => {
+    const item = document.createElement("li");
+    item.className = `ranking-item ${index < 3 ? "top" : ""}`;
+    item.innerHTML = `
+      <span class="rank-number">${index + 1}</span>
+      <span class="rank-player">
+        <strong>${player.name}</strong>
+        <span>${player.team}</span>
+      </span>
+      <span class="rank-score">${player.score} pts</span>
+    `;
+    rankingList.append(item);
+  });
+}
+
 function renderMessages(messages) {
   const term = chatSearchInput.value.trim().toLowerCase();
   const filtered = term
@@ -270,6 +322,7 @@ function renderAll() {
   renderBets(orderedMatches, state.bets);
   renderInsights(orderedMatches);
   renderMessages(orderedMessages);
+  renderRankings();
 }
 
 let listenersReady = { rosters: false, matches: false, messages: false, bets: false };

@@ -10,13 +10,14 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=20260225" />
+    <link rel="stylesheet" href="./styles.css?v=20260226" />
   </head>
   <body>
     <header class="hero" id="top">
       <nav class="nav container">
         <a class="brand" href="#top">Basket Clash</a>
         <div class="nav-links">
+          <a href="#ranking">Rankings</a>
           <a href="#about">Σχετικά</a>
           <a href="#management">Διαχείριση</a>
           <a href="#schedule">Αγώνες</a>
@@ -25,6 +26,21 @@
           <a href="#chat">Chat</a>
         </div>
       </nav>
+
+      <div class="container hero-top-strip">
+        <div class="hero-pill">🏀 Live Rivalry Dashboard</div>
+        <div class="hero-pill">⚡ Smart Player Rankings</div>
+        <div class="hero-pill">🔥 Real-time community updates</div>
+      </div>
+
+      <section class="container ranking-showcase" id="ranking">
+        <div class="ranking-heading">
+          <p class="league">Top Players • Combined Teams</p>
+          <h2>Power Ranking HotHeroes + Ιπτάμενοι</h2>
+          <p>Η κατάταξη υπολογίζεται αυτόματα από τις ολοκληρωμένες αναμετρήσεις και τη φόρμα της ομάδας.</p>
+        </div>
+        <ol id="ranking-list" class="ranking-list"></ol>
+      </section>
 
       <div class="hero-content container">
         <div class="team-card hotheroes">
@@ -293,6 +309,6 @@
     <script>
       window.CHAT_RESET_PASSWORD = window.CHAT_RESET_PASSWORD || "HotHeroes2026!";
     </script>
-    <script type="module" src="./script.js?v=20260225"></script>
+    <script type="module" src="./script.js?v=20260226"></script>
   </body>
 </html>
