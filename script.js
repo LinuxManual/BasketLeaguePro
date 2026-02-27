@@ -528,6 +528,13 @@ playerStatsForm.addEventListener("submit", async (event) => {
   const blocks = Number.parseInt(document.getElementById("stats-blocks").value, 10) || 0;
   if (!key) return;
 
+  const code = window.prompt("Βάλε κωδικό για καταχώρηση stats παίκτη:");
+  if (code === null) return;
+  if (code.trim() !== RANKING_RESET_CODE) {
+    setStatus("Λάθος κωδικός για ενημέρωση stats παικτών ❌", false);
+    return;
+  }
+
   const [team, name] = key.split("::");
   const existing = state.playerStats.find((item) => item.team === team && item.name === name);
   if (existing) {
