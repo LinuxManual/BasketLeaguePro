@@ -6,20 +6,41 @@
     <title>Basket Clash | HotHeroes vs Ιπτάμενοι</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css?v=20260226" />
   </head>
   <body>
     <header class="hero" id="top">
       <nav class="nav container">
         <a class="brand" href="#top">Basket Clash</a>
         <div class="nav-links">
+          <a href="#ranking">Rankings</a>
           <a href="#about">Σχετικά</a>
           <a href="#management">Διαχείριση</a>
           <a href="#schedule">Αγώνες</a>
+          <a href="#betting">Betting</a>
+          <a href="#insights">Insights</a>
           <a href="#chat">Chat</a>
         </div>
       </nav>
+
+      <div class="container hero-top-strip">
+        <div class="hero-pill">🏀 Live Rivalry Dashboard</div>
+        <div class="hero-pill">⚡ Smart Player Rankings</div>
+        <div class="hero-pill">🔥 Real-time community updates</div>
+      </div>
+
+      <section class="container ranking-showcase" id="ranking">
+        <div class="ranking-heading">
+          <p class="league">Top Players • Combined Teams</p>
+          <h2>Power Ranking HotHeroes + Ιπτάμενοι</h2>
+          <p>Η κατάταξη υπολογίζεται αυτόματα από τις ολοκληρωμένες αναμετρήσεις και τη φόρμα της ομάδας.</p>
+        </div>
+        <ol id="ranking-list" class="ranking-list"></ol>
+      </section>
 
       <div class="hero-content container">
         <div class="team-card hotheroes">
@@ -32,7 +53,7 @@
         <div class="versus">
           <p class="league">Basket League Pro</p>
           <h1>HotHeroes <span>vs</span> Ιπτάμενοι</h1>
-          <p class="subtitle">Τα δεδομένα συγχρονίζονται πλέον ζωντανά μέσω Firebase Cloud.</p>
+          <p class="subtitle">Όλα τα δεδομένα αγώνων και ομάδων περνάνε από εσένα.</p>
           <a class="btn-primary" href="#management">Πρόσθεσε μέλη & αγώνες</a>
         </div>
 
@@ -49,8 +70,16 @@
       <section class="section container" id="about">
         <div class="section-heading">
           <h2>Η πλατφόρμα των δύο ομάδων</h2>
-          <p>Διαχείριση συνθέσεων και αγώνων σε πραγματικό χρόνο.</p>
+          <p>
+            Εδώ μπορείς να ορίσεις εσύ τη σύνθεση των ομάδων, να δημιουργήσεις αγώνες, να βάλεις
+            τα σκορ και να τα βλέπουν όλοι από τον ίδιο server.
+          </p>
         </div>
+        <article class="panel-card api-config-card">
+          <h3>Firebase σύνδεση</h3>
+          <p id="connection-status" class="connection-status">Έλεγχος σύνδεσης...</p>
+          <p class="chat-tip">Το site χρησιμοποιεί Firebase (Cloud Firestore) για live συγχρονισμό σε όλες τις συσκευές.</p>
+        </article>
       </section>
 
       <section class="section section-alt" id="management">
@@ -58,13 +87,15 @@
           <article class="panel-card">
             <h3>Προσθήκη μέλους</h3>
             <form id="player-form" class="stack-form">
-              <label>Ομάδα
+              <label>
+                Ομάδα
                 <select id="team-select" required>
                   <option value="HotHeroes">HotHeroes</option>
                   <option value="Ιπτάμενοι">Ιπτάμενοι</option>
                 </select>
               </label>
-              <label>Όνομα μέλους
+              <label>
+                Όνομα μέλους
                 <input id="player-name" type="text" maxlength="40" required placeholder="π.χ. Γιάννης Π." />
               </label>
               <button class="btn-primary" type="submit">Προσθήκη</button>
@@ -74,9 +105,18 @@
           <article class="panel-card">
             <h3>Νέος αγώνας</h3>
             <form id="match-form" class="stack-form">
-              <label>Ημερομηνία <input id="match-date" type="date" required /></label>
-              <label>Ώρα <input id="match-time" type="time" required /></label>
-              <label>Γήπεδο <input id="match-court" type="text" maxlength="50" required placeholder="π.χ. Κλειστό Νέας Πόλης" /></label>
+              <label>
+                Ημερομηνία
+                <input id="match-date" type="date" required />
+              </label>
+              <label>
+                Ώρα
+                <input id="match-time" type="time" required />
+              </label>
+              <label>
+                Γήπεδο
+                <input id="match-court" type="text" maxlength="50" required placeholder="π.χ. Κλειστό Νέας Πόλης" />
+              </label>
               <button class="btn-primary" type="submit">Δημιουργία αγώνα</button>
             </form>
           </article>
@@ -84,11 +124,64 @@
           <article class="panel-card">
             <h3>Καταχώρηση σκορ</h3>
             <form id="score-form" class="stack-form">
-              <label>Αγώνας <select id="match-select" required></select></label>
-              <label>HotHeroes <input id="score-hot" type="number" min="0" required /></label>
-              <label>Ιπτάμενοι <input id="score-fly" type="number" min="0" required /></label>
+              <label>
+                Αγώνας
+                <select id="match-select" required></select>
+              </label>
+              <label>
+                HotHeroes
+                <input id="score-hot" type="number" min="0" required />
+              </label>
+              <label>
+                Ιπτάμενοι
+                <input id="score-fly" type="number" min="0" required />
+              </label>
               <button class="btn-primary" type="submit">Αποθήκευση σκορ</button>
             </form>
+          </article>
+
+          <article class="panel-card">
+            <h3>Νέο στοίχημα</h3>
+            <form id="bet-form" class="stack-form">
+              <label>
+                Αγώνας
+                <select id="bet-match-select" required></select>
+              </label>
+              <label>
+                Όνομα παίκτη
+                <input id="bet-user" type="text" maxlength="24" required placeholder="π.χ. KostasBets" />
+              </label>
+              <label>
+                Πρόβλεψη HotHeroes
+                <input id="bet-hot" type="number" min="0" required />
+              </label>
+              <label>
+                Πρόβλεψη Ιπτάμενοι
+                <input id="bet-fly" type="number" min="0" required />
+              </label>
+              <label>
+                Ποντάρισμα (€)
+                <input id="bet-stake" type="number" min="1" step="0.5" required placeholder="π.χ. 10.5" />
+              </label>
+              <button class="btn-primary" type="submit">Καταχώρηση στοιχήματος</button>
+            </form>
+          </article>
+
+          <article class="panel-card">
+            <h3>Διαχείριση ranking</h3>
+            <form id="ranking-points-form" class="stack-form">
+              <label>
+                Παίκτης
+                <select id="ranking-player-select" required></select>
+              </label>
+              <label>
+                Extra πόντοι
+                <input id="ranking-points" type="number" min="1" required placeholder="π.χ. 5" />
+              </label>
+              <button class="btn-primary" type="submit">Προσθήκη πόντων</button>
+              <button id="ranking-reset" class="btn-secondary" type="button">Reset extra πόντων</button>
+            </form>
+            <p class="chat-tip">Για προσθήκη/Reset ranking χρειάζεται κωδικός ασφαλείας.</p>
           </article>
         </div>
       </section>
@@ -97,11 +190,18 @@
         <div class="container">
           <div class="section-heading">
             <h2>Πρόγραμμα Αγώνων</h2>
-            <tbody id="matches-body"></tbody>
+            <p>Οι αγώνες που δημιουργείς και τα σκορ τους αποθηκεύονται αυτόματα.</p>
+          </div>
+          <div class="schedule-table-wrapper">
             <table class="schedule-table">
               <thead>
                 <tr>
-                  <th>Ημερομηνία</th><th>Ώρα</th><th>Γήπεδο</th><th>Matchup</th><th>Σκορ</th><th>Κατάσταση</th>
+                  <th>Ημερομηνία</th>
+                  <th>Ώρα</th>
+                  <th>Γήπεδο</th>
+                  <th>Matchup</th>
+                  <th>Σκορ</th>
+                  <th>Κατάσταση</th>
                 </tr>
               </thead>
               <tbody id="matches-body"></tbody>
@@ -110,26 +210,95 @@
         </div>
       </section>
 
+      <section class="section section-alt" id="betting">
+        <div class="container">
+          <div class="section-heading">
+            <h2>Betting Center</h2>
+            <p>Δες όλα τα στοιχήματα για κάθε αγώνα και τα αποτελέσματά τους.</p>
+          </div>
+          <div class="schedule-table-wrapper">
+            <table class="schedule-table betting-table">
+              <thead>
+                <tr>
+                  <th>Αγώνας</th>
+                  <th>Παίκτης</th>
+                  <th>Πρόβλεψη</th>
+                  <th>Ποντάρισμα (€)</th>
+                  <th>Κατάσταση</th>
+                </tr>
+              </thead>
+              <tbody id="bets-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+
+
+      <section class="section section-alt" id="insights">
+        <div class="container">
+          <div class="section-heading">
+            <h2>Game Insights</h2>
+            <p>Ζωντανή ανάλυση από τα δεδομένα που καταχωρεί η κοινότητα.</p>
+          </div>
+          <div class="insights-grid">
+            <article class="panel-card">
+              <h3>Συνολικοί αγώνες</h3>
+              <p id="ins-total" class="insight-value">0</p>
+            </article>
+            <article class="panel-card">
+              <h3>HotHeroes νίκες</h3>
+              <p id="ins-hot-wins" class="insight-value">0</p>
+            </article>
+            <article class="panel-card">
+              <h3>Ιπτάμενοι νίκες</h3>
+              <p id="ins-fly-wins" class="insight-value">0</p>
+            </article>
+            <article class="panel-card">
+              <h3>Μ.Ο. συνολικών πόντων</h3>
+              <p id="ins-avg-total" class="insight-value">0</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
       <section class="section section-alt" id="chat">
         <div class="container chat-layout">
           <div>
             <div class="section-heading left-align">
-              <h2>Fan Zone Live Chat</h2>
-              <p>Τα μηνύματα εμφανίζονται αμέσως σε όλους τους χρήστες.</p>
+              <h2>Fan Zone Chat</h2>
+              <p>
+                Γράψε μήνυμα ως φίλαθλος. Τα δεδομένα αποθηκεύονται στον server και τα βλέπουν όλοι από οποιαδήποτε συσκευή.
+              </p>
             </div>
+
             <form id="chat-form" class="chat-form">
-              <label>Όνομα <input type="text" id="username" placeholder="π.χ. Giorgos23" required maxlength="24" /></label>
-              <label>Μήνυμα <textarea id="message" rows="4" placeholder="Γράψε το μήνυμά σου..." required maxlength="280"></textarea></label>
+              <label>
+                Όνομα
+                <input type="text" id="username" placeholder="π.χ. Giorgos23" required maxlength="24" />
+              </label>
+              <label>
+                Μήνυμα
+                <textarea id="message" rows="4" placeholder="Γράψε την άποψή σου για τον αγώνα..." required maxlength="280"></textarea>
+              </label>
               <div class="chat-actions">
                 <button type="submit" class="btn-primary">Αποστολή</button>
                 <button type="button" id="clear-chat" class="btn-secondary">Καθαρισμός Chat</button>
               </div>
             </form>
           </div>
+
           <aside class="chat-panel">
             <h3>Live μηνύματα</h3>
-            <p class="chat-tip">Συγχρονισμός μέσω Cloud Firestore.</p>
+            <p class="chat-tip">Τα μηνύματα συγχρονίζονται για όλους μέσω server.</p>
+            <p class="chat-tip">Ο καθαρισμός chat απαιτεί κωδικό ασφαλείας.</p>
+            <p class="chat-tip">Το username κλειδώνει στην πρώτη αποστολή και δεν αλλάζει.</p>
+            <label class="chat-tip">Αναζήτηση μηνυμάτων
+              <input id="chat-search" type="text" placeholder="βρες μήνυμα ή username" />
+            </label>
+            <p id="chat-counter" class="chat-tip">0 μηνύματα</p>
             <ul id="chat-messages" class="chat-messages"></ul>
+
           </aside>
         </div>
       </section>
@@ -142,9 +311,24 @@
       </div>
     </footer>
 
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    
-    <script src="script.js"></script>
+    <script>
+      window.FIREBASE_CONFIG = window.FIREBASE_CONFIG || {
+        apiKey: "AIzaSyBm5k1wF7-RaC8hEtTy2Phznxey0FnAcsU",
+        authDomain: "basket-clash-7901c.firebaseapp.com",
+        databaseURL: "https://basket-clash-7901c-default-rtdb.firebaseio.com",
+        projectId: "basket-clash-7901c",
+        storageBucket: "basket-clash-7901c.firebasestorage.app",
+        messagingSenderId: "307971899685",
+        appId: "1:307971899685:web:8143142e3fbe3526ef5acc",
+        measurementId: "G-SDPWG5QT2N"
+      };
+    </script>
+    <script>
+      window.CHAT_RESET_PASSWORD = window.CHAT_RESET_PASSWORD || "HotHeroes2026!";
+    </script>
+    <script>
+      window.RANKING_ADMIN_CODE = window.RANKING_ADMIN_CODE || "1914";
+    </script>
+    <script type="module" src="./script.js?v=20260227"></script>
   </body>
 </html>
