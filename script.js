@@ -281,7 +281,7 @@ function createMessageElement(message) {
 
 
 async function resetRankingScores() {
-  const code = window.prompt("Βάλε τον κωδικό reset για τα ranking scores:");
+  const code = window.prompt("Βάλε τον κωδικό για μηδενισμό των ranking stats:");
   if (code === null) return;
   if (code.trim() !== RANKING_RESET_CODE) {
     setStatus("Λάθος κωδικός reset για τα rankings ❌", false);
@@ -315,10 +315,6 @@ function calculateWeights() {
 }
 
 function calculatePlayerRankings() {
-  const completedMatches = state.matches.filter((m) => Number.isInteger(m.hotScore) && Number.isInteger(m.flyScore));
-  const hotWins = completedMatches.filter((m) => m.hotScore > m.flyScore).length;
-  const flyWins = completedMatches.filter((m) => m.flyScore > m.hotScore).length;
-
   const weights = calculateWeights();
 
   const statsByPlayer = new Map(state.playerStats.map((p) => [`${p.team}::${p.name}`, p]));
@@ -330,14 +326,12 @@ function calculatePlayerRankings() {
   return allPlayers
     .map((player) => {
       const playerStats = statsByPlayer.get(`${player.team}::${player.name}`) || { shots: 0, assists: 0, rebounds: 0, blocks: 0 };
-      const teamWins = player.team === "HotHeroes" ? hotWins : flyWins;
-      const baseScore = 30 + teamWins * 3;
       const statsScore =
         playerStats.shots * weights.shots +
         playerStats.assists * weights.assists +
         playerStats.rebounds * weights.rebounds +
         playerStats.blocks * weights.blocks;
-      const totalScore = baseScore + statsScore;
+      const totalScore = statsScore;
       return { ...player, score: totalScore, stats: playerStats };
     })
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, "el"));
@@ -554,7 +548,9 @@ playerStatsForm.addEventListener("submit", async (event) => {
 });
 
 rankingWeightsForm.addEventListener("input", () => renderRankings());
-resetRankingScoresButton.addEventListener("click", () => resetRankingScores());
+if (resetRankingScoresButton) {
+  resetRankingScoresButton.addEventListener("click", () => resetRankingScores());
+}
 
 chatForm.addEventListener("submit", async (event) => {
   event.preventDefault();
