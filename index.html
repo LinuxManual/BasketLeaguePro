@@ -166,6 +166,23 @@
               <button class="btn-primary" type="submit">Καταχώρηση στοιχήματος</button>
             </form>
           </article>
+
+          <article class="panel-card">
+            <h3>Διαχείριση ranking</h3>
+            <form id="ranking-points-form" class="stack-form">
+              <label>
+                Παίκτης
+                <select id="ranking-player-select" required></select>
+              </label>
+              <label>
+                Extra πόντοι
+                <input id="ranking-points" type="number" min="1" required placeholder="π.χ. 5" />
+              </label>
+              <button class="btn-primary" type="submit">Προσθήκη πόντων</button>
+              <button id="ranking-reset" class="btn-secondary" type="button">Reset extra πόντων</button>
+            </form>
+            <p class="chat-tip">Για προσθήκη/Reset ranking χρειάζεται κωδικός ασφαλείας.</p>
+          </article>
         </div>
       </section>
 
@@ -309,6 +326,9 @@
     <script>
       window.CHAT_RESET_PASSWORD = window.CHAT_RESET_PASSWORD || "HotHeroes2026!";
     </script>
-    <script type="module" src="./script.js?v=20260226"></script>
+    <script>
+      window.RANKING_ADMIN_CODE = window.RANKING_ADMIN_CODE || "1914";
+    </script>
+    <script type="module" src="./script.js?v=20260227"></script>
   </body>
 </html>

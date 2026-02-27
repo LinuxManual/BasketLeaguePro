@@ -21,7 +21,8 @@ const state = {
   rosters: { HotHeroes: [], "Ιπτάμενοι": [] },
   matches: [],
   messages: [],
-  bets: []
+  bets: [],
+  manualPoints: {}
 };
 
 const playerForm = document.getElementById("player-form");
@@ -43,6 +44,10 @@ const chatMessages = document.getElementById("chat-messages");
 const clearButton = document.getElementById("clear-chat");
 const connectionStatus = document.getElementById("connection-status");
 const rankingList = document.getElementById("ranking-list");
+const rankingPointsForm = document.getElementById("ranking-points-form");
+const rankingPlayerSelect = document.getElementById("ranking-player-select");
+const rankingPointsInput = document.getElementById("ranking-points");
+const rankingResetButton = document.getElementById("ranking-reset");
 
 const insTotal = document.getElementById("ins-total");
 const insHotWins = document.getElementById("ins-hot-wins");
@@ -50,6 +55,7 @@ const insFlyWins = document.getElementById("ins-fly-wins");
 const insAvgTotal = document.getElementById("ins-avg-total");
 
 const CHAT_RESET_PASSWORD = window.CHAT_RESET_PASSWORD || "HotHeroes2026!";
+const RANKING_ADMIN_CODE = String(window.RANKING_ADMIN_CODE || "1914");
 
 
 const euroFormatter = new Intl.NumberFormat("el-GR", {
@@ -98,6 +104,7 @@ const rostersRef = doc(db, "basketLeaguePro", "rosters");
 const matchesRef = collection(db, "basketLeaguePro", "matches", "items");
 const messagesRef = collection(db, "basketLeaguePro", "messages", "items");
 const betsRef = collection(db, "basketLeaguePro", "bets", "items");
+const rankingRef = doc(db, "basketLeaguePro", "ranking");
 
 function formatDate(dateValue) {
   return new Date(`${dateValue}T00:00:00`).toLocaleDateString("el-GR");
@@ -201,6 +208,32 @@ function renderBets(matches, bets) {
   });
 }
 
+function renderRankingPlayerSelect() {
+  const players = [
+    ...state.rosters.HotHeroes,
+    ...state.rosters["Ιπτάμενοι"]
+  ].sort((a, b) => a.localeCompare(b, "el"));
+
+  rankingPlayerSelect.innerHTML = "";
+
+  if (!players.length) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "Πρώτα πρόσθεσε παίκτες";
+    rankingPlayerSelect.append(option);
+    rankingPlayerSelect.disabled = true;
+    return;
+  }
+
+  rankingPlayerSelect.disabled = false;
+  players.forEach((player) => {
+    const option = document.createElement("option");
+    option.value = player;
+    option.textContent = player;
+    rankingPlayerSelect.append(option);
+  });
+}
+
 function renderInsights(matches) {
   insTotal.textContent = String(matches.length);
   let hotWins = 0;
@@ -259,7 +292,8 @@ function calculatePlayerRankings() {
       const formScore = teamWins * 12;
       const activityScore = completedMatches.length * 4;
       const consistencyBoost = Math.max(0, 12 - Math.abs(hotWins - flyWins) * 2);
-      const totalScore = base + formScore + activityScore + consistencyBoost;
+      const manualBoost = Number(state.manualPoints[player.name]) || 0;
+      const totalScore = base + formScore + activityScore + consistencyBoost + manualBoost;
       return { ...player, score: totalScore };
     })
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, "el"));
@@ -320,12 +354,13 @@ function renderAll() {
   renderMatches(orderedMatches);
   renderMatchSelect(orderedMatches);
   renderBets(orderedMatches, state.bets);
+  renderRankingPlayerSelect();
   renderInsights(orderedMatches);
   renderMessages(orderedMessages);
   renderRankings();
 }
 
-let listenersReady = { rosters: false, matches: false, messages: false, bets: false };
+let listenersReady = { rosters: false, matches: false, messages: false, bets: false, ranking: false };
 function markReady(key) {
   listenersReady[key] = true;
   if (Object.values(listenersReady).every(Boolean)) {
@@ -360,6 +395,13 @@ onSnapshot(query(betsRef, orderBy("createdAt", "desc")), (snap) => {
   markReady("bets");
   renderAll();
 }, (error) => setStatus(`Firebase betting error ❌ (${error.message})`, false));
+
+onSnapshot(rankingRef, (snap) => {
+  const data = snap.data() || {};
+  state.manualPoints = typeof data.points === "object" && data.points !== null ? data.points : {};
+  markReady("ranking");
+  renderAll();
+}, (error) => setStatus(`Firebase ranking error ❌ (${error.message})`, false));
 
 playerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -409,6 +451,41 @@ betForm.addEventListener("submit", async (event) => {
 
   await addDoc(betsRef, { matchId, user, predHot, predFly, stake: normalizedStake, createdAt: Date.now() });
   betForm.reset();
+});
+
+rankingPointsForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const playerName = rankingPlayerSelect.value;
+  const pointsToAdd = Number.parseInt(rankingPointsInput.value, 10);
+  if (!playerName || Number.isNaN(pointsToAdd) || pointsToAdd <= 0) return;
+
+  const code = window.prompt("Βάλε κωδικό για προσθήκη πόντων ranking:");
+  if (code === null) return;
+  if (code !== RANKING_ADMIN_CODE) {
+    setStatus("Λάθος κωδικός ranking ❌", false);
+    return;
+  }
+
+  const nextPoints = { ...state.manualPoints };
+  nextPoints[playerName] = (Number(nextPoints[playerName]) || 0) + pointsToAdd;
+  await setDoc(rankingRef, { points: nextPoints }, { merge: true });
+  rankingPointsForm.reset();
+  setStatus(`Προστέθηκαν ${pointsToAdd} πόντοι στον ${playerName} ✅`, true);
+});
+
+rankingResetButton.addEventListener("click", async () => {
+  const code = window.prompt("Βάλε κωδικό για reset ranking πόντων:");
+  if (code === null) return;
+  if (code !== RANKING_ADMIN_CODE) {
+    setStatus("Λάθος κωδικός ranking ❌", false);
+    return;
+  }
+
+  const ok = window.confirm("Να γίνει reset σε όλους τους extra πόντους ranking;");
+  if (!ok) return;
+
+  await setDoc(rankingRef, { points: {} }, { merge: true });
+  setStatus("Έγινε reset στους extra πόντους ranking ✅", true);
 });
 
 chatForm.addEventListener("submit", async (event) => {
