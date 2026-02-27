@@ -61,7 +61,7 @@ const insFlyWins = document.getElementById("ins-fly-wins");
 const insAvgTotal = document.getElementById("ins-avg-total");
 
 const CHAT_RESET_PASSWORD = window.CHAT_RESET_PASSWORD || "HotHeroes2026!";
-const RANKING_RESET_CODE = "1914";
+const RANKING_RESET_CODE = "4081";
 
 
 const euroFormatter = new Intl.NumberFormat("el-GR", {
