@@ -53,6 +53,7 @@ const weightShots = document.getElementById("weight-shots");
 const weightAssists = document.getElementById("weight-assists");
 const weightRebounds = document.getElementById("weight-rebounds");
 const weightBlocks = document.getElementById("weight-blocks");
+const resetRankingScoresButton = document.getElementById("reset-ranking-scores");
 
 const insTotal = document.getElementById("ins-total");
 const insHotWins = document.getElementById("ins-hot-wins");
@@ -60,6 +61,7 @@ const insFlyWins = document.getElementById("ins-fly-wins");
 const insAvgTotal = document.getElementById("ins-avg-total");
 
 const CHAT_RESET_PASSWORD = window.CHAT_RESET_PASSWORD || "HotHeroes2026!";
+const RANKING_RESET_CODE = "1914";
 
 
 const euroFormatter = new Intl.NumberFormat("el-GR", {
@@ -277,6 +279,31 @@ function createMessageElement(message) {
 }
 
 
+
+async function resetRankingScores() {
+  const code = window.prompt("Βάλε τον κωδικό reset για τα ranking scores:");
+  if (code === null) return;
+  if (code.trim() !== RANKING_RESET_CODE) {
+    setStatus("Λάθος κωδικός reset για τα rankings ❌", false);
+    return;
+  }
+
+  const ok = window.confirm("Να μηδενιστούν όλα τα stats που επηρεάζουν το ranking;");
+  if (!ok) return;
+
+  const snap = await getDocs(playerStatsRef);
+  if (snap.empty) {
+    setStatus("Δεν υπάρχουν ranking stats για μηδενισμό.", true);
+    return;
+  }
+
+  const batch = writeBatch(db);
+  snap.forEach((item) => {
+    batch.update(item.ref, { shots: 0, assists: 0, rebounds: 0, blocks: 0 });
+  });
+  await batch.commit();
+  setStatus("Τα ranking scores μηδενίστηκαν επιτυχώς ✅", true);
+}
 
 function calculateWeights() {
   return {
@@ -527,6 +554,7 @@ playerStatsForm.addEventListener("submit", async (event) => {
 });
 
 rankingWeightsForm.addEventListener("input", () => renderRankings());
+resetRankingScoresButton.addEventListener("click", () => resetRankingScores());
 
 chatForm.addEventListener("submit", async (event) => {
   event.preventDefault();
