@@ -34,7 +34,13 @@ const iptamenoiList = document.getElementById("iptamenoi-list");
 const matchesBody = document.getElementById("matches-body");
 const matchSelect = document.getElementById("match-select");
 const betForm = document.getElementById("bet-form");
+const betMarketSelect = document.getElementById("bet-market");
 const betMatchSelect = document.getElementById("bet-match-select");
+const betWinnerSelect = document.getElementById("bet-winner-select");
+const betMvpSelect = document.getElementById("bet-mvp-select");
+const betMatchRow = document.getElementById("bet-match-row");
+const betWinnerRow = document.getElementById("bet-winner-row");
+const betMvpRow = document.getElementById("bet-mvp-row");
 const betsBody = document.getElementById("bets-body");
 const playerStatsForm = document.getElementById("player-stats-form");
 const statsPlayerSelect = document.getElementById("stats-player-select");
@@ -63,6 +69,64 @@ const insAvgTotal = document.getElementById("ins-avg-total");
 const CHAT_RESET_PASSWORD = window.CHAT_RESET_PASSWORD || "HotHeroes2026!";
 const RANKING_RESET_CODE = "4081";
 
+
+const MATCH_WINNER_MULTIPLIER = 1.8;
+const SEASON_MVP_MULTIPLIER = 4;
+const MAX_BET_STAKE = 100;
+
+function updateBetFormVisibility() {
+  const market = betMarketSelect.value;
+  const isMatchWinner = market === "match_winner";
+
+  betMatchRow.hidden = !isMatchWinner;
+  betWinnerRow.hidden = !isMatchWinner;
+  betMvpRow.hidden = isMatchWinner;
+
+  betMatchSelect.required = isMatchWinner;
+  betWinnerSelect.required = isMatchWinner;
+  betMvpSelect.required = !isMatchWinner;
+}
+
+function getCompletedWinner(match) {
+  if (!match || !Number.isInteger(match.hotScore) || !Number.isInteger(match.flyScore)) return null;
+  if (match.hotScore > match.flyScore) return "HotHeroes";
+  if (match.flyScore > match.hotScore) return "Ιπτάμενοι";
+  return null;
+}
+
+function settleBet(bet, matchesById, currentMvpKey, seasonFinished) {
+  if (bet.type === "match_winner") {
+    const match = matchesById.get(bet.matchId);
+    const winner = getCompletedWinner(match);
+    if (!match || winner === null) return { market: "Νικητής αγώνα", matchLabel: match ? `${formatDate(match.date)} ${match.time} • ${match.court}` : "Αγώνας που αφαιρέθηκε", label: "Pending", cssClass: "upcoming", payout: null };
+
+    const won = bet.pick === winner;
+    return {
+      market: "Νικητής αγώνα",
+      matchLabel: `${formatDate(match.date)} ${match.time} • ${match.court}`,
+      label: won ? `Won • x${MATCH_WINNER_MULTIPLIER.toFixed(2)}` : "Lost",
+      cssClass: won ? "done" : "lost",
+      payout: won ? Number((bet.stake * MATCH_WINNER_MULTIPLIER).toFixed(2)) : 0
+    };
+  }
+
+  if (bet.type === "season_mvp") {
+    const prettyPick = bet.pick?.split("::")[1] || bet.pick || "-";
+    if (!seasonFinished || !currentMvpKey) return { market: "MVP σεζόν", matchLabel: "Τέλος σεζόν", label: "Pending season end", cssClass: "upcoming", payout: null, prettyPick };
+
+    const won = bet.pick === currentMvpKey;
+    return {
+      market: "MVP σεζόν",
+      matchLabel: "Τέλος σεζόν",
+      label: won ? `Won • x${SEASON_MVP_MULTIPLIER.toFixed(2)}` : "Lost",
+      cssClass: won ? "done" : "lost",
+      payout: won ? Number((bet.stake * SEASON_MVP_MULTIPLIER).toFixed(2)) : 0,
+      prettyPick
+    };
+  }
+
+  return { market: "Legacy", matchLabel: "-", label: "Unsupported legacy bet", cssClass: "upcoming", payout: null };
+}
 
 const euroFormatter = new Intl.NumberFormat("el-GR", {
   style: "currency",
@@ -201,38 +265,62 @@ function renderPlayerStatsSelect() {
   });
 }
 
+
+function renderBetMvpSelect() {
+  betMvpSelect.innerHTML = "";
+  const allPlayers = [
+    ...state.rosters.HotHeroes.map((name) => ({ name, team: "HotHeroes" })),
+    ...state.rosters["Ιπτάμενοι"].map((name) => ({ name, team: "Ιπτάμενοι" }))
+  ].sort((a, b) => a.name.localeCompare(b.name, "el"));
+
+  if (!allPlayers.length) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "Πρώτα πρόσθεσε μέλη";
+    betMvpSelect.append(option);
+    return;
+  }
+
+  allPlayers.forEach((player) => {
+    const option = document.createElement("option");
+    option.value = `${player.team}::${player.name}`;
+    option.textContent = `${player.name} • ${player.team}`;
+    betMvpSelect.append(option);
+  });
+}
+
 function renderBets(matches, bets) {
   betsBody.innerHTML = "";
   if (!bets.length) {
     const row = document.createElement("tr");
-    row.innerHTML = '<td colspan="5">Δεν υπάρχουν στοιχήματα ακόμα.</td>';
+    row.innerHTML = '<td colspan="7">Δεν υπάρχουν στοιχήματα ακόμα.</td>';
     betsBody.append(row);
     return;
   }
 
   const matchesById = new Map(matches.map((m) => [m.id, m]));
+  const rankings = calculatePlayerRankings();
+  const completedCount = matches.filter((m) => Number.isInteger(m.hotScore) && Number.isInteger(m.flyScore)).length;
+  const seasonFinished = matches.length > 0 && completedCount === matches.length;
+  const currentMvpKey = rankings.length ? `${rankings[0].team}::${rankings[0].name}` : null;
+
   const ordered = [...bets].sort((a, b) => b.createdAt - a.createdAt).slice(0, 150);
   ordered.forEach((bet) => {
-    const match = matchesById.get(bet.matchId);
     const row = document.createElement("tr");
-    const matchLabel = match
-      ? `${formatDate(match.date)} ${match.time} • ${match.court}`
-      : "Αγώνας που αφαιρέθηκε";
+    const result = settleBet(bet, matchesById, currentMvpKey, seasonFinished);
+    const payoutLabel = result.payout === null ? "-" : euroFormatter.format(result.payout);
 
-    let resultLabel = "Pending";
-    let resultClass = "upcoming";
-    if (match && Number.isInteger(match.hotScore) && Number.isInteger(match.flyScore)) {
-      const correct = match.hotScore === bet.predHot && match.flyScore === bet.predFly;
-      resultLabel = correct ? "Won" : "Lost";
-      resultClass = correct ? "done" : "lost";
-    }
+    let prediction = bet.pick || "-";
+    if (bet.type === "season_mvp") prediction = result.prettyPick || prediction;
 
     row.innerHTML = `
-      <td>${matchLabel}</td>
+      <td>${result.market}</td>
+      <td>${result.matchLabel}</td>
       <td>${bet.user}</td>
-      <td>${bet.predHot} - ${bet.predFly}</td>
+      <td>${prediction}</td>
       <td>${euroFormatter.format(Number(bet.stake) || 0)}</td>
-      <td><span class="status ${resultClass}">${resultLabel}</span></td>
+      <td>${payoutLabel}</td>
+      <td><span class="status ${result.cssClass}">${result.label}</span></td>
     `;
     betsBody.append(row);
   });
@@ -420,6 +508,8 @@ function renderAll() {
   renderMatches(orderedMatches);
   renderMatchSelect(orderedMatches);
   renderPlayerStatsSelect();
+  renderBetMvpSelect();
+  updateBetFormVisibility();
   renderBets(orderedMatches, state.bets);
   renderInsights(orderedMatches);
   renderMessages(orderedMessages);
@@ -503,19 +593,39 @@ scoreForm.addEventListener("submit", async (event) => {
 
 betForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+  const market = betMarketSelect.value;
   const matchId = betMatchSelect.value;
+  const winnerPick = betWinnerSelect.value;
+  const mvpPick = betMvpSelect.value;
   const user = document.getElementById("bet-user").value.trim();
-  const predHot = Number.parseInt(document.getElementById("bet-hot").value, 10);
-  const predFly = Number.parseInt(document.getElementById("bet-fly").value, 10);
   const stake = Number.parseFloat(document.getElementById("bet-stake").value);
   const normalizedStake = Number(stake.toFixed(2));
+  const cappedStake = Math.min(normalizedStake, MAX_BET_STAKE);
 
-  if (!matchId || !user || Number.isNaN(predHot) || Number.isNaN(predFly) || Number.isNaN(stake) || normalizedStake <= 0) {
-    return;
+  if (!market || !user || Number.isNaN(stake) || normalizedStake <= 0) return;
+  if (market === "match_winner" && (!matchId || !winnerPick)) return;
+  if (market === "season_mvp" && !mvpPick) return;
+
+  const payload = {
+    type: market,
+    user,
+    stake: cappedStake,
+    createdAt: Date.now()
+  };
+
+  if (market === "match_winner") {
+    payload.matchId = matchId;
+    payload.pick = winnerPick;
+  } else {
+    payload.pick = mvpPick;
   }
 
-  await addDoc(betsRef, { matchId, user, predHot, predFly, stake: normalizedStake, createdAt: Date.now() });
+  await addDoc(betsRef, payload);
+  if (cappedStake < normalizedStake) {
+    setStatus(`Το stake περιορίστηκε δίκαια στο μέγιστο €${MAX_BET_STAKE}.`, true);
+  }
   betForm.reset();
+  updateBetFormVisibility();
 });
 
 
@@ -594,5 +704,6 @@ clearButton.addEventListener("click", async () => {
   setStatus("Το chat καθαρίστηκε επιτυχώς ✅", true);
 });
 
+betMarketSelect.addEventListener("change", () => updateBetFormVisibility());
 chatSearchInput.addEventListener("input", () => renderAll());
 hydrateLockedUsername();
