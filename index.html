@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=20260226" />
+    <link rel="stylesheet" href="./styles.css?v=20260311" />
   </head>
   <body class="site-locked">
     <section id="lock-screen" class="lock-screen" aria-live="polite">
@@ -26,6 +26,7 @@
           <button class="btn-primary" type="submit">Είσοδος</button>
         </form>
         <p id="site-lock-error" class="lock-error" role="status"></p>
+        <p class="lock-build">Build 2026.03.11</p>
       </div>
     </section>
 
@@ -348,12 +349,14 @@
       window.RANKING_ADMIN_CODE = window.RANKING_ADMIN_CODE || "1914";
     </script>
     <script>
-      window.SITE_ENTRY_CODE = window.SITE_ENTRY_CODE || "8041";
+      window.SITE_ENTRY_CODE = window.SITE_ENTRY_CODE || "4091";
     </script>
     <script>
       (() => {
+        const APP_BUILD = "2026.03.11";
+        console.info(`BasketLeaguePro build ${APP_BUILD}`);
         const SITE_UNLOCKED_KEY = "basketleaguepro-site-unlocked";
-        const entryCode = String(window.SITE_ENTRY_CODE || "8041");
+        const entryCode = String(window.SITE_ENTRY_CODE || "4091");
 
         const unlockSite = () => {
           localStorage.setItem(SITE_UNLOCKED_KEY, "1");

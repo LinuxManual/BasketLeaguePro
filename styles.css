@@ -644,6 +644,14 @@ textarea {
   font-weight: 600;
 }
 
+
+.lock-build {
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: #9aa8d8;
+  opacity: 0.9;
+}
+
 body.site-locked {
   overflow: hidden;
 }
