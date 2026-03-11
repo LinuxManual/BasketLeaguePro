@@ -10,9 +10,27 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=20260226" />
+    <link rel="stylesheet" href="./styles.css?v=20260311" />
   </head>
-  <body>
+  <body class="site-locked">
+    <section id="lock-screen" class="lock-screen" aria-live="polite">
+      <div class="lock-card">
+        <p class="lock-badge">🔒 Basket League Pro</p>
+        <h1>Καλώς ήρθες!</h1>
+        <p>Για να μπεις στο site, πληκτρολόγησε τον κωδικό πρόσβασης.</p>
+        <form id="site-lock-form" class="stack-form">
+          <label>
+            Κωδικός εισόδου
+            <input id="site-lock-code" type="password" inputmode="numeric" maxlength="4" required placeholder="••••" />
+          </label>
+          <button class="btn-primary" type="submit">Είσοδος</button>
+        </form>
+        <p id="site-lock-error" class="lock-error" role="status"></p>
+        <p class="lock-build">Build 2026.03.11</p>
+      </div>
+    </section>
+
+    <div id="app-shell">
     <header class="hero" id="top">
       <nav class="nav container">
         <a class="brand" href="#top">Basket Clash</a>
@@ -310,6 +328,7 @@
         <a href="#top">Επιστροφή στην κορυφή</a>
       </div>
     </footer>
+    </div>
 
     <script>
       window.FIREBASE_CONFIG = window.FIREBASE_CONFIG || {
@@ -329,6 +348,47 @@
     <script>
       window.RANKING_ADMIN_CODE = window.RANKING_ADMIN_CODE || "1914";
     </script>
-    <script type="module" src="./script.js?v=20260227"></script>
+    <script>
+      window.SITE_ENTRY_CODE = window.SITE_ENTRY_CODE || "4091";
+    </script>
+    <script>
+      (() => {
+        const APP_BUILD = "2026.03.11";
+        console.info(`BasketLeaguePro build ${APP_BUILD}`);
+        const SITE_UNLOCKED_KEY = "basketleaguepro-site-unlocked";
+        const entryCode = String(window.SITE_ENTRY_CODE || "4091");
+
+        const unlockSite = () => {
+          localStorage.setItem(SITE_UNLOCKED_KEY, "1");
+          document.body.classList.remove("site-locked");
+        };
+
+        if (localStorage.getItem(SITE_UNLOCKED_KEY) === "1") {
+          unlockSite();
+          return;
+        }
+
+        const form = document.getElementById("site-lock-form");
+        const codeInput = document.getElementById("site-lock-code");
+        const error = document.getElementById("site-lock-error");
+
+        form?.addEventListener("submit", (event) => {
+          event.preventDefault();
+          const entered = codeInput.value.trim();
+          if (entered !== entryCode) {
+            error.textContent = "Λάθος κωδικός. Δοκίμασε ξανά.";
+            codeInput.value = "";
+            codeInput.focus();
+            return;
+          }
+
+          error.textContent = "";
+          unlockSite();
+        });
+
+        codeInput?.focus();
+      })();
+    </script>
+    <script type="module" src="./script.js?v=20260311"></script>
   </body>
 </html>
