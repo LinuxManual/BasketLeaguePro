@@ -48,7 +48,9 @@ const rankingPointsForm = document.getElementById("ranking-points-form");
 const rankingPlayerSelect = document.getElementById("ranking-player-select");
 const rankingPointsInput = document.getElementById("ranking-points");
 const rankingResetButton = document.getElementById("ranking-reset");
-
+const siteLockForm = document.getElementById("site-lock-form");
+const siteLockCodeInput = document.getElementById("site-lock-code");
+const siteLockError = document.getElementById("site-lock-error");
 const insTotal = document.getElementById("ins-total");
 const insHotWins = document.getElementById("ins-hot-wins");
 const insFlyWins = document.getElementById("ins-fly-wins");
@@ -56,14 +58,41 @@ const insAvgTotal = document.getElementById("ins-avg-total");
 
 const CHAT_RESET_PASSWORD = window.CHAT_RESET_PASSWORD || "HotHeroes2026!";
 const RANKING_ADMIN_CODE = String(window.RANKING_ADMIN_CODE || "1914");
-
-
+const SITE_ENTRY_CODE = String(window.SITE_ENTRY_CODE || "4091");
 const euroFormatter = new Intl.NumberFormat("el-GR", {
   style: "currency",
   currency: "EUR",
   minimumFractionDigits: 2,
   maximumFractionDigits: 2
 });
+
+
+function unlockSite() {
+  document.body.classList.remove("site-locked");
+}
+
+function initSiteLock() {
+  siteLockForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const entered = siteLockCodeInput.value.trim();
+    if (entered !== SITE_ENTRY_CODE) {
+      siteLockError.textContent = "Λάθος κωδικός. Δοκίμασε ξανά.";
+      siteLockCodeInput.value = "";
+      siteLockCodeInput.focus();
+      return;
+    }
+
+    siteLockError.textContent = "";
+    unlockSite();
+  });
+
+  siteLockCodeInput?.focus();
+}
+
+function printBuildInfo() {
+  const APP_BUILD = "2026.03.13";
+  console.info(`BasketLeaguePro build ${APP_BUILD}`);
+}
 
 function setStatus(text, ok = true) {
   connectionStatus.textContent = text;
@@ -524,4 +553,6 @@ clearButton.addEventListener("click", async () => {
 });
 
 chatSearchInput.addEventListener("input", () => renderAll());
+printBuildInfo();
+initSiteLock();
 hydrateLockedUsername();
