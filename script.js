@@ -16,6 +16,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const LOCKED_USERNAME_KEY = "basketleaguepro-locked-username";
+const SITE_UNLOCKED_KEY = "basketleaguepro-site-unlocked";
 
 const state = {
   rosters: { HotHeroes: [], "Ιπτάμενοι": [] },
@@ -522,4 +523,5 @@ clearButton.addEventListener("click", async () => {
 });
 
 chatSearchInput.addEventListener("input", () => renderAll());
+initSiteLock();
 hydrateLockedUsername();
