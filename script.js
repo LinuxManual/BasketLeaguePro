@@ -49,10 +49,6 @@ const rankingPointsForm = document.getElementById("ranking-points-form");
 const rankingPlayerSelect = document.getElementById("ranking-player-select");
 const rankingPointsInput = document.getElementById("ranking-points");
 const rankingResetButton = document.getElementById("ranking-reset");
-const siteLockForm = document.getElementById("site-lock-form");
-const siteLockCodeInput = document.getElementById("site-lock-code");
-const siteLockError = document.getElementById("site-lock-error");
-
 const insTotal = document.getElementById("ins-total");
 const insHotWins = document.getElementById("ins-hot-wins");
 const insFlyWins = document.getElementById("ins-fly-wins");
@@ -60,8 +56,6 @@ const insAvgTotal = document.getElementById("ins-avg-total");
 
 const CHAT_RESET_PASSWORD = window.CHAT_RESET_PASSWORD || "HotHeroes2026!";
 const RANKING_ADMIN_CODE = String(window.RANKING_ADMIN_CODE || "1914");
-const SITE_ENTRY_CODE = String(window.SITE_ENTRY_CODE || "8041");
-
 const euroFormatter = new Intl.NumberFormat("el-GR", {
   style: "currency",
   currency: "EUR",
@@ -69,39 +63,6 @@ const euroFormatter = new Intl.NumberFormat("el-GR", {
   maximumFractionDigits: 2
 });
 
-
-function unlockSite() {
-  localStorage.setItem(SITE_UNLOCKED_KEY, "1");
-  document.body.classList.remove("site-locked");
-}
-
-function isSiteUnlocked() {
-  return localStorage.getItem(SITE_UNLOCKED_KEY) === "1";
-}
-
-function initSiteLock() {
-  if (isSiteUnlocked()) {
-    document.body.classList.remove("site-locked");
-    return;
-  }
-
-  document.body.classList.add("site-locked");
-  siteLockCodeInput?.focus();
-
-  siteLockForm?.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const entered = siteLockCodeInput.value.trim();
-    if (entered !== SITE_ENTRY_CODE) {
-      siteLockError.textContent = "Λάθος κωδικός. Δοκίμασε ξανά.";
-      siteLockCodeInput.value = "";
-      siteLockCodeInput.focus();
-      return;
-    }
-
-    siteLockError.textContent = "";
-    unlockSite();
-  });
-}
 
 function setStatus(text, ok = true) {
   connectionStatus.textContent = text;

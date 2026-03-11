@@ -350,6 +350,42 @@
     <script>
       window.SITE_ENTRY_CODE = window.SITE_ENTRY_CODE || "8041";
     </script>
-    <script type="module" src="./script.js?v=20260227"></script>
+    <script>
+      (() => {
+        const SITE_UNLOCKED_KEY = "basketleaguepro-site-unlocked";
+        const entryCode = String(window.SITE_ENTRY_CODE || "8041");
+
+        const unlockSite = () => {
+          localStorage.setItem(SITE_UNLOCKED_KEY, "1");
+          document.body.classList.remove("site-locked");
+        };
+
+        if (localStorage.getItem(SITE_UNLOCKED_KEY) === "1") {
+          unlockSite();
+          return;
+        }
+
+        const form = document.getElementById("site-lock-form");
+        const codeInput = document.getElementById("site-lock-code");
+        const error = document.getElementById("site-lock-error");
+
+        form?.addEventListener("submit", (event) => {
+          event.preventDefault();
+          const entered = codeInput.value.trim();
+          if (entered !== entryCode) {
+            error.textContent = "Λάθος κωδικός. Δοκίμασε ξανά.";
+            codeInput.value = "";
+            codeInput.focus();
+            return;
+          }
+
+          error.textContent = "";
+          unlockSite();
+        });
+
+        codeInput?.focus();
+      })();
+    </script>
+    <script type="module" src="./script.js?v=20260311"></script>
   </body>
 </html>
