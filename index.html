@@ -12,7 +12,24 @@
     />
     <link rel="stylesheet" href="./styles.css?v=20260226" />
   </head>
-  <body>
+  <body class="site-locked">
+    <section id="lock-screen" class="lock-screen" aria-live="polite">
+      <div class="lock-card">
+        <p class="lock-badge">🔒 Basket League Pro</p>
+        <h1>Καλώς ήρθες!</h1>
+        <p>Για να μπεις στο site, πληκτρολόγησε τον κωδικό πρόσβασης.</p>
+        <form id="site-lock-form" class="stack-form">
+          <label>
+            Κωδικός εισόδου
+            <input id="site-lock-code" type="password" inputmode="numeric" maxlength="4" required placeholder="••••" />
+          </label>
+          <button class="btn-primary" type="submit">Είσοδος</button>
+        </form>
+        <p id="site-lock-error" class="lock-error" role="status"></p>
+      </div>
+    </section>
+
+    <div id="app-shell">
     <header class="hero" id="top">
       <nav class="nav container">
         <a class="brand" href="#top">Basket Clash</a>
@@ -310,6 +327,7 @@
         <a href="#top">Επιστροφή στην κορυφή</a>
       </div>
     </footer>
+    </div>
 
     <script>
       window.FIREBASE_CONFIG = window.FIREBASE_CONFIG || {
@@ -328,6 +346,9 @@
     </script>
     <script>
       window.RANKING_ADMIN_CODE = window.RANKING_ADMIN_CODE || "1914";
+    </script>
+    <script>
+      window.SITE_ENTRY_CODE = window.SITE_ENTRY_CODE || "8041";
     </script>
     <script type="module" src="./script.js?v=20260227"></script>
   </body>
