@@ -48,7 +48,6 @@ const rankingPointsForm = document.getElementById("ranking-points-form");
 const rankingPlayerSelect = document.getElementById("ranking-player-select");
 const rankingPointsInput = document.getElementById("ranking-points");
 const rankingResetButton = document.getElementById("ranking-reset");
-
 const insTotal = document.getElementById("ins-total");
 const insHotWins = document.getElementById("ins-hot-wins");
 const insFlyWins = document.getElementById("ins-fly-wins");
@@ -56,14 +55,13 @@ const insAvgTotal = document.getElementById("ins-avg-total");
 
 const CHAT_RESET_PASSWORD = window.CHAT_RESET_PASSWORD || "HotHeroes2026!";
 const RANKING_ADMIN_CODE = String(window.RANKING_ADMIN_CODE || "1914");
-
-
 const euroFormatter = new Intl.NumberFormat("el-GR", {
   style: "currency",
   currency: "EUR",
   minimumFractionDigits: 2,
   maximumFractionDigits: 2
 });
+
 
 function setStatus(text, ok = true) {
   connectionStatus.textContent = text;
