@@ -1,0 +1,15 @@
+{
+  "name": "basketleaguepro",
+  "version": "2.0.0",
+  "private": true,
+  "description": "BasketLeaguePro local server and static client",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "check": "node --check server.js"
+  }
+}

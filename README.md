@@ -7,6 +7,8 @@ Professional single-page website for the basketball rivalry between **HotHeroes*
 - Added live **Game Insights** dashboard (total matches, wins per team, average total points).
 - Removed admin login and admin commands from the interface.
 - Kept protected chat reset with password.
+- Added hardened local API validation, duplicate-prevention for roster entries, and `/api/health` endpoint.
+- Added `package.json` with `start`, `dev`, and `check` scripts for easier maintenance.
 
 ## Firebase Setup (configured)
 The app is prefilled with your Firebase project config:
