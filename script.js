@@ -56,6 +56,8 @@ const insAvgTotal = document.getElementById("ins-avg-total");
 
 const CHAT_RESET_PASSWORD = window.CHAT_RESET_PASSWORD || "HotHeroes2026!";
 const RANKING_ADMIN_CODE = String(window.RANKING_ADMIN_CODE || "1914");
+const MAX_PLAYER_NAME_LENGTH = 80;
+const MAX_CHAT_MESSAGE_LENGTH = 500;
 const euroFormatter = new Intl.NumberFormat("el-GR", {
   style: "currency",
   currency: "EUR",
@@ -78,6 +80,10 @@ function lockUsername(name) {
   localStorage.setItem(LOCKED_USERNAME_KEY, name);
   usernameInput.value = name;
   usernameInput.readOnly = true;
+}
+
+function normalizeText(value, maxLength) {
+  return String(value || "").trim().replace(/\s+/g, " ").slice(0, maxLength);
 }
 
 function hydrateLockedUsername() {
@@ -378,19 +384,25 @@ onSnapshot(rostersRef, (snap) => {
 }, (error) => setStatus(`Firebase rosters error ❌ (${error.message})`, false));
 
 onSnapshot(matchesRef, (snap) => {
-  state.matches = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  state.matches = snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
   markReady("matches");
   renderAll();
 }, (error) => setStatus(`Firebase matches error ❌ (${error.message})`, false));
 
 onSnapshot(query(messagesRef, orderBy("createdAt", "desc")), (snap) => {
-  state.messages = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  state.messages = snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
   markReady("messages");
   renderAll();
 }, (error) => setStatus(`Firebase chat error ❌ (${error.message})`, false));
 
 onSnapshot(query(betsRef, orderBy("createdAt", "desc")), (snap) => {
-  state.bets = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  state.bets = snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
   markReady("bets");
   renderAll();
 }, (error) => setStatus(`Firebase betting error ❌ (${error.message})`, false));
@@ -406,8 +418,14 @@ playerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const team = document.getElementById("team-select").value;
   const input = document.getElementById("player-name");
-  const name = input.value.trim();
+  const name = normalizeText(input.value, MAX_PLAYER_NAME_LENGTH);
   if (!name) return;
+
+  const exists = state.rosters[team].some((player) => player.toLocaleLowerCase("el-GR") === name.toLocaleLowerCase("el-GR"));
+  if (exists) {
+    setStatus(`Ο παίκτης ${name} υπάρχει ήδη στην ομάδα.`, false);
+    return;
+  }
 
   await setDoc(rostersRef, { [team]: arrayUnion(name) }, { merge: true });
   input.value = "";
@@ -489,8 +507,8 @@ rankingResetButton.addEventListener("click", async () => {
 
 chatForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  let user = usernameInput.value.trim();
-  const text = messageInput.value.trim();
+  let user = normalizeText(usernameInput.value, MAX_PLAYER_NAME_LENGTH);
+  const text = normalizeText(messageInput.value, MAX_CHAT_MESSAGE_LENGTH);
   if (!user || !text) return;
 
   const locked = getLockedUsername();

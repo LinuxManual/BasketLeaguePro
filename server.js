@@ -5,6 +5,9 @@ const path = require("path");
 const PORT = process.env.PORT || 4173;
 const HOST = process.env.HOST || "0.0.0.0";
 const STORE_PATH = path.join(__dirname, "data", "store.json");
+const MAX_BODY_BYTES = 1_000_000;
+const MAX_NAME_LENGTH = 80;
+const MAX_TEXT_LENGTH = 500;
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -45,6 +48,20 @@ function addCorsHeaders(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "no-referrer");
+}
+
+function normalizeText(value, maxLength) {
+  return String(value || "").trim().replace(/\s+/g, " ").slice(0, maxLength);
+}
+
+function isValidDate(date) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(date);
+}
+
+function isValidTime(time) {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
 }
 
 function readBody(req) {
@@ -52,7 +69,7 @@ function readBody(req) {
     let data = "";
     req.on("data", (chunk) => {
       data += chunk;
-      if (data.length > 1_000_000) reject(new Error("Payload too large"));
+      if (data.length > MAX_BODY_BYTES) reject(new Error("Payload too large"));
     });
     req.on("end", () => {
       if (!data) return resolve({});
@@ -74,8 +91,8 @@ function createId() {
 function serveStatic(req, res) {
   const pathname = new URL(req.url, "http://localhost").pathname;
   const reqPath = pathname === "/" ? "/index.html" : pathname;
-  const safePath = path.normalize(reqPath).replace(/^\.\.(\/|\\|$)/, "");
-  const fullPath = path.join(__dirname, safePath);
+  const safePath = path.normalize(decodeURIComponent(reqPath)).replace(/^([/\\])+/, "");
+  const fullPath = path.resolve(__dirname, safePath);
 
   if (!fullPath.startsWith(__dirname)) {
     res.writeHead(403);
@@ -116,10 +133,11 @@ const server = http.createServer(async (req, res) => {
     try {
       const body = await readBody(req);
       const team = body.team;
-      const name = String(body.name || "").trim();
+      const name = normalizeText(body.name, MAX_NAME_LENGTH);
       if (!["HotHeroes", "Ιπτάμενοι"].includes(team) || !name) return sendJson(res, 400, { error: "Invalid player payload" });
       const store = loadStore();
-      store.rosters[team].push(name);
+      const exists = store.rosters[team].some((item) => item.toLocaleLowerCase("el-GR") === name.toLocaleLowerCase("el-GR"));
+      if (!exists) store.rosters[team].push(name);
       saveStore(store);
       return sendJson(res, 200, store);
     } catch (error) {
@@ -130,10 +148,10 @@ const server = http.createServer(async (req, res) => {
   if (req.url === "/api/matches" && req.method === "POST") {
     try {
       const body = await readBody(req);
-      const date = String(body.date || "").trim();
-      const time = String(body.time || "").trim();
-      const court = String(body.court || "").trim();
-      if (!date || !time || !court) return sendJson(res, 400, { error: "Invalid match payload" });
+      const date = normalizeText(body.date, 10);
+      const time = normalizeText(body.time, 5);
+      const court = normalizeText(body.court, MAX_NAME_LENGTH);
+      if (!date || !time || !court || !isValidDate(date) || !isValidTime(time)) return sendJson(res, 400, { error: "Invalid match payload" });
       const store = loadStore();
       store.matches.push({ id: createId(), date, time, court, hotScore: null, flyScore: null });
       store.matches.sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
@@ -150,7 +168,7 @@ const server = http.createServer(async (req, res) => {
       const matchId = String(body.matchId || "");
       const hotScore = Number.parseInt(body.hotScore, 10);
       const flyScore = Number.parseInt(body.flyScore, 10);
-      if (!matchId || Number.isNaN(hotScore) || Number.isNaN(flyScore)) return sendJson(res, 400, { error: "Invalid score payload" });
+      if (!matchId || Number.isNaN(hotScore) || Number.isNaN(flyScore) || hotScore < 0 || flyScore < 0) return sendJson(res, 400, { error: "Invalid score payload" });
       const store = loadStore();
       const match = store.matches.find((item) => item.id === matchId);
       if (!match) return sendJson(res, 404, { error: "Match not found" });
@@ -166,8 +184,8 @@ const server = http.createServer(async (req, res) => {
   if (req.url === "/api/chat" && req.method === "POST") {
     try {
       const body = await readBody(req);
-      const user = String(body.user || "").trim();
-      const text = String(body.text || "").trim();
+      const user = normalizeText(body.user, MAX_NAME_LENGTH);
+      const text = normalizeText(body.text, MAX_TEXT_LENGTH);
       if (!user || !text) return sendJson(res, 400, { error: "Invalid chat payload" });
       const store = loadStore();
       store.messages.unshift({ user, text, createdAt: Date.now() });
@@ -184,6 +202,14 @@ const server = http.createServer(async (req, res) => {
     store.messages = [];
     saveStore(store);
     return sendJson(res, 200, store);
+  }
+
+  if (req.url === "/api/health" && req.method === "GET") {
+    return sendJson(res, 200, { ok: true, uptime: process.uptime() });
+  }
+
+  if (req.url.startsWith("/api/")) {
+    return sendJson(res, 405, { error: "Method or endpoint not allowed" });
   }
 
   serveStatic(req, res);
