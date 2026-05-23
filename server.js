@@ -26,7 +26,8 @@ function loadStore() {
       "Ιπτάμενοι": Array.isArray(parsed?.rosters?.["Ιπτάμενοι"]) ? parsed.rosters["Ιπτάμενοι"] : []
     },
     matches: Array.isArray(parsed?.matches) ? parsed.matches : [],
-    messages: Array.isArray(parsed?.messages) ? parsed.messages : []
+    messages: Array.isArray(parsed?.messages) ? parsed.messages : [],
+    bets: Array.isArray(parsed?.bets) ? parsed.bets : []
   };
 }
 
@@ -56,13 +57,8 @@ function normalizeText(value, maxLength) {
   return String(value || "").trim().replace(/\s+/g, " ").slice(0, maxLength);
 }
 
-function isValidDate(date) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(date);
-}
-
-function isValidTime(time) {
-  return /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
-}
+function isValidDate(date) { return /^\d{4}-\d{2}-\d{2}$/.test(date); }
+function isValidTime(time) { return /^([01]\d|2[0-3]):[0-5]\d$/.test(time); }
 
 function readBody(req) {
   return new Promise((resolve, reject) => {
@@ -73,11 +69,7 @@ function readBody(req) {
     });
     req.on("end", () => {
       if (!data) return resolve({});
-      try {
-        resolve(JSON.parse(data));
-      } catch {
-        reject(new Error("Invalid JSON"));
-      }
+      try { resolve(JSON.parse(data)); } catch { reject(new Error("Invalid JSON")); }
     });
     req.on("error", reject);
   });
@@ -121,11 +113,7 @@ function serveStatic(req, res) {
 
 const server = http.createServer(async (req, res) => {
   addCorsHeaders(res);
-  if (req.method === "OPTIONS") {
-    res.writeHead(204);
-    res.end();
-    return;
-  }
+  if (req.method === "OPTIONS") return res.writeHead(204).end();
 
   if (req.url === "/api/state" && req.method === "GET") return sendJson(res, 200, loadStore());
 
@@ -140,9 +128,7 @@ const server = http.createServer(async (req, res) => {
       if (!exists) store.rosters[team].push(name);
       saveStore(store);
       return sendJson(res, 200, store);
-    } catch (error) {
-      return sendJson(res, 400, { error: error.message });
-    }
+    } catch (error) { return sendJson(res, 400, { error: error.message }); }
   }
 
   if (req.url === "/api/matches" && req.method === "POST") {
@@ -157,9 +143,7 @@ const server = http.createServer(async (req, res) => {
       store.matches.sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
       saveStore(store);
       return sendJson(res, 200, store);
-    } catch (error) {
-      return sendJson(res, 400, { error: error.message });
-    }
+    } catch (error) { return sendJson(res, 400, { error: error.message }); }
   }
 
   if (req.url === "/api/scores" && req.method === "POST") {
@@ -172,13 +156,31 @@ const server = http.createServer(async (req, res) => {
       const store = loadStore();
       const match = store.matches.find((item) => item.id === matchId);
       if (!match) return sendJson(res, 404, { error: "Match not found" });
-      match.hotScore = hotScore;
-      match.flyScore = flyScore;
+      match.hotScore = hotScore; match.flyScore = flyScore;
       saveStore(store);
       return sendJson(res, 200, store);
-    } catch (error) {
-      return sendJson(res, 400, { error: error.message });
-    }
+    } catch (error) { return sendJson(res, 400, { error: error.message }); }
+  }
+
+  if (req.url === "/api/bets" && req.method === "POST") {
+    try {
+      const body = await readBody(req);
+      const user = normalizeText(body.user, MAX_NAME_LENGTH);
+      const matchId = normalizeText(body.matchId, 120);
+      const predHot = Number.parseInt(body.predHot, 10);
+      const predFly = Number.parseInt(body.predFly, 10);
+      const stake = Number.parseFloat(body.stake);
+      if (!user || !matchId || Number.isNaN(predHot) || Number.isNaN(predFly) || predHot < 0 || predFly < 0 || Number.isNaN(stake) || stake <= 0) {
+        return sendJson(res, 400, { error: "Invalid bet payload" });
+      }
+      const store = loadStore();
+      const match = store.matches.find((item) => item.id === matchId);
+      if (!match) return sendJson(res, 404, { error: "Match not found" });
+      store.bets.unshift({ id: createId(), user, matchId, predHot, predFly, stake, createdAt: Date.now() });
+      store.bets = store.bets.slice(0, 500);
+      saveStore(store);
+      return sendJson(res, 200, store);
+    } catch (error) { return sendJson(res, 400, { error: error.message }); }
   }
 
   if (req.url === "/api/chat" && req.method === "POST") {
@@ -192,29 +194,17 @@ const server = http.createServer(async (req, res) => {
       store.messages = store.messages.slice(0, 100);
       saveStore(store);
       return sendJson(res, 200, store);
-    } catch (error) {
-      return sendJson(res, 400, { error: error.message });
-    }
+    } catch (error) { return sendJson(res, 400, { error: error.message }); }
   }
 
   if (req.url === "/api/chat" && req.method === "DELETE") {
-    const store = loadStore();
-    store.messages = [];
-    saveStore(store);
-    return sendJson(res, 200, store);
+    const store = loadStore(); store.messages = []; saveStore(store); return sendJson(res, 200, store);
   }
 
-  if (req.url === "/api/health" && req.method === "GET") {
-    return sendJson(res, 200, { ok: true, uptime: process.uptime() });
-  }
-
-  if (req.url.startsWith("/api/")) {
-    return sendJson(res, 405, { error: "Method or endpoint not allowed" });
-  }
+  if (req.url === "/api/health" && req.method === "GET") return sendJson(res, 200, { ok: true, uptime: process.uptime() });
+  if (req.url.startsWith("/api/")) return sendJson(res, 405, { error: "Method or endpoint not allowed" });
 
   serveStatic(req, res);
 });
 
-server.listen(PORT, HOST, () => {
-  console.log(`BasketLeaguePro running at http://${HOST}:${PORT}`);
-});
+server.listen(PORT, HOST, () => console.log(`BasketLeaguePro running at http://${HOST}:${PORT}`));
