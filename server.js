@@ -276,7 +276,7 @@ const server = http.createServer(async (req, res) => {
   if (pathname === "/api/scores" && req.method === "POST") return handleScores(req, res);
   if (pathname === "/api/chat" && ["POST", "DELETE"].includes(req.method)) return handleChat(req, res);
   if (pathname === "/api/health" && req.method === "GET") {
-    return sendJson(res, 200, { ok: true, version: "4.0.0", uptime: process.uptime() });
+    return sendJson(res, 200, { ok: true, version: "4.0.1", uptime: process.uptime() });
   }
 
   if (pathname.startsWith("/api/")) {
