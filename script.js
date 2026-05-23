@@ -2,6 +2,8 @@ const TEAM_HOT = "HotHeroes";
 const TEAM_FLY = "Ιπτάμενοι";
 const LEGACY_TEAM_FLY = "Ξ™Ο€Ο„Ξ¬ΞΌΞµΞ½ΞΏΞΉ";
 const TEAMS = [TEAM_HOT, TEAM_FLY];
+const STORAGE_KEY = "basketleaguepro:v4";
+const USE_STATIC_STORE = location.hostname.endsWith("github.io");
 
 const els = {
   insights: document.getElementById("insights"),
@@ -37,15 +39,128 @@ function normalizeState(next = {}) {
 }
 
 async function api(path, options = {}) {
-  const response = await fetch(`/api/${path}`, {
-    headers: { "Content-Type": "application/json" },
-    ...options
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(payload.error || "Request failed");
+  if (USE_STATIC_STORE) return localApi(path, options);
+
+  try {
+    const response = await fetch(`/api/${path}`, {
+      headers: { "Content-Type": "application/json" },
+      ...options
+    });
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) return localApi(path, options);
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      if (response.status === 404) return localApi(path, options);
+      throw new Error(payload.error || "Request failed");
+    }
+    return payload;
+  } catch (error) {
+    if (error instanceof TypeError) return localApi(path, options);
+    throw error;
   }
-  return payload;
+}
+
+function readLocalStore() {
+  try {
+    return normalizeState(JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"));
+  } catch {
+    return normalizeState();
+  }
+}
+
+function writeLocalStore(nextState) {
+  const normalized = normalizeState(nextState);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+  return normalized;
+}
+
+function parseBody(options) {
+  if (!options.body) return {};
+  try {
+    return JSON.parse(options.body);
+  } catch {
+    throw new Error("Invalid JSON");
+  }
+}
+
+function createId() {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function normalizeText(value, maxLength) {
+  return String(value || "").trim().replace(/\s+/g, " ").slice(0, maxLength);
+}
+
+function localApi(path, options = {}) {
+  const method = options.method || "GET";
+  const body = parseBody(options);
+  const store = readLocalStore();
+
+  if (path === "state" && method === "GET") return Promise.resolve(store);
+
+  if (path === "players" && method === "POST") {
+    const team = body.team;
+    const name = normalizeText(body.name, 80);
+    if (!TEAMS.includes(team) || !name) throw new Error("Invalid player payload");
+    const exists = store.rosters[team].some((item) => item.toLocaleLowerCase("el-GR") === name.toLocaleLowerCase("el-GR"));
+    if (!exists) store.rosters[team].push(name);
+    return Promise.resolve(writeLocalStore(store));
+  }
+
+  if (path === "players" && method === "DELETE") {
+    const team = body.team;
+    const name = normalizeText(body.name, 80);
+    if (!TEAMS.includes(team) || !name) throw new Error("Invalid player payload");
+    store.rosters[team] = store.rosters[team].filter((item) => item.toLocaleLowerCase("el-GR") !== name.toLocaleLowerCase("el-GR"));
+    return Promise.resolve(writeLocalStore(store));
+  }
+
+  if (path === "matches" && method === "POST") {
+    const date = normalizeText(body.date, 10);
+    const time = normalizeText(body.time, 5);
+    const court = normalizeText(body.court, 80);
+    if (!date || !time || !court) throw new Error("Invalid match payload");
+    store.matches.push({ id: createId(), date, time, court, hotScore: null, flyScore: null });
+    store.matches.sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+    return Promise.resolve(writeLocalStore(store));
+  }
+
+  if (path === "matches" && method === "DELETE") {
+    const matchId = String(body.matchId || "");
+    store.matches = store.matches.filter((item) => item.id !== matchId);
+    return Promise.resolve(writeLocalStore(store));
+  }
+
+  if (path === "scores" && method === "POST") {
+    const matchId = String(body.matchId || "");
+    const hotScore = Number.parseInt(body.hotScore, 10);
+    const flyScore = Number.parseInt(body.flyScore, 10);
+    const match = store.matches.find((item) => item.id === matchId);
+    if (!match || Number.isNaN(hotScore) || Number.isNaN(flyScore) || hotScore < 0 || flyScore < 0) {
+      throw new Error("Invalid score payload");
+    }
+    match.hotScore = hotScore;
+    match.flyScore = flyScore;
+    return Promise.resolve(writeLocalStore(store));
+  }
+
+  if (path === "chat" && method === "POST") {
+    const user = normalizeText(body.user, 80);
+    const text = normalizeText(body.text, 500);
+    if (!user || !text) throw new Error("Invalid chat payload");
+    store.messages.unshift({ user, text, createdAt: Date.now() });
+    store.messages = store.messages.slice(0, 100);
+    return Promise.resolve(writeLocalStore(store));
+  }
+
+  if (path === "chat" && method === "DELETE") {
+    store.messages = [];
+    return Promise.resolve(writeLocalStore(store));
+  }
+
+  if (path === "health" && method === "GET") return Promise.resolve({ ok: true, version: "4.0.0", mode: "static" });
+  throw new Error("Method or endpoint not allowed");
 }
 
 function createNode(tag, options = {}, children = []) {
