@@ -33,3 +33,8 @@ On GitHub Pages, the dashboard runs as a static app. Roster, match, score, and c
 - `POST /api/chat`
 - `DELETE /api/chat`
 - `GET /api/health`
+
+
+## Deployment note
+
+If UI updates do not appear after deploy, hard refresh the page or clear cache once. Static assets are cache-busted using version query strings in `index.html` (for `styles.css` and `script.js`).
