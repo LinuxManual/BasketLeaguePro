@@ -1,8 +1,8 @@
 {
   "name": "basketleaguepro",
-  "version": "2.0.0",
+  "version": "4.0.0",
   "private": true,
-  "description": "BasketLeaguePro local server and static client",
+  "description": "BasketLeaguePro local-first league dashboard",
   "type": "commonjs",
   "engines": {
     "node": ">=20"
