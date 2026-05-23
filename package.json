@@ -1,6 +1,6 @@
 {
   "name": "basketleaguepro",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "private": true,
   "description": "BasketLeaguePro local-first league dashboard",
   "type": "commonjs",
@@ -10,6 +10,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "check": "node --check server.js"
+    "check": "node --check server.js && npm run check:static",
+    "sync:static": "bash scripts/sync-static.sh",
+    "check:static": "bash scripts/sync-static.sh && git diff --exit-code -- docs index.html 404.html styles.css script.js data/store.json"
   }
 }
