@@ -1,545 +1,68 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getAnalytics, isSupported as analyticsSupported } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  updateDoc,
-  onSnapshot,
-  collection,
-  addDoc,
-  query,
-  orderBy,
-  getDocs,
-  writeBatch,
-  arrayUnion
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-const LOCKED_USERNAME_KEY = "basketleaguepro-locked-username";
-const SITE_UNLOCKED_KEY = "basketleaguepro-site-unlocked";
-
-const state = {
-  rosters: { HotHeroes: [], "Ιπτάμενοι": [] },
-  matches: [],
-  messages: [],
-  bets: [],
-  manualPoints: {}
+const els = {
+  hotList: document.getElementById('hot-list'), flyList: document.getElementById('fly-list'),
+  insights: document.getElementById('insights'), matchesBody: document.getElementById('matches-body'),
+  matchId: document.getElementById('match-id'), messages: document.getElementById('messages')
 };
 
-const playerForm = document.getElementById("player-form");
-const matchForm = document.getElementById("match-form");
-const scoreForm = document.getElementById("score-form");
-const hotHeroesList = document.getElementById("hotheroes-list");
-const iptamenoiList = document.getElementById("iptamenoi-list");
-const matchesBody = document.getElementById("matches-body");
-const matchSelect = document.getElementById("match-select");
-const betForm = document.getElementById("bet-form");
-const betMatchSelect = document.getElementById("bet-match-select");
-const betsBody = document.getElementById("bets-body");
-const chatForm = document.getElementById("chat-form");
-const usernameInput = document.getElementById("username");
-const messageInput = document.getElementById("message");
-const chatSearchInput = document.getElementById("chat-search");
-const chatCounter = document.getElementById("chat-counter");
-const chatMessages = document.getElementById("chat-messages");
-const clearButton = document.getElementById("clear-chat");
-const connectionStatus = document.getElementById("connection-status");
-const rankingList = document.getElementById("ranking-list");
-const rankingPointsForm = document.getElementById("ranking-points-form");
-const rankingPlayerSelect = document.getElementById("ranking-player-select");
-const rankingPointsInput = document.getElementById("ranking-points");
-const rankingResetButton = document.getElementById("ranking-reset");
-const insTotal = document.getElementById("ins-total");
-const insHotWins = document.getElementById("ins-hot-wins");
-const insFlyWins = document.getElementById("ins-fly-wins");
-const insAvgTotal = document.getElementById("ins-avg-total");
-
-const CHAT_RESET_PASSWORD = window.CHAT_RESET_PASSWORD || "HotHeroes2026!";
-const RANKING_ADMIN_CODE = String(window.RANKING_ADMIN_CODE || "1914");
-const MAX_PLAYER_NAME_LENGTH = 80;
-const MAX_CHAT_MESSAGE_LENGTH = 500;
-const euroFormatter = new Intl.NumberFormat("el-GR", {
-  style: "currency",
-  currency: "EUR",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2
-});
-
-
-function setStatus(text, ok = true) {
-  connectionStatus.textContent = text;
-  connectionStatus.classList.toggle("ok", ok);
-  connectionStatus.classList.toggle("error", !ok);
+async function api(path, options = {}) {
+  const res = await fetch(`/api/${path}`, {headers:{'Content-Type':'application/json'}, ...options});
+  if (!res.ok) throw new Error((await res.json()).error || 'Request failed');
+  return res.json();
 }
 
-function getLockedUsername() {
-  return localStorage.getItem(LOCKED_USERNAME_KEY) || "";
-}
+function fmtDate(v){ return new Date(`${v}T00:00:00`).toLocaleDateString('en-GB'); }
 
-function lockUsername(name) {
-  localStorage.setItem(LOCKED_USERNAME_KEY, name);
-  usernameInput.value = name;
-  usernameInput.readOnly = true;
-}
+function render(state){
+  els.hotList.innerHTML = state.rosters.HotHeroes.map(p=>`<li>${p}</li>`).join('') || '<li>No players yet.</li>';
+  els.flyList.innerHTML = state.rosters['Ιπτάμενοι'].map(p=>`<li>${p}</li>`).join('') || '<li>No players yet.</li>';
 
-function normalizeText(value, maxLength) {
-  return String(value || "").trim().replace(/\s+/g, " ").slice(0, maxLength);
-}
+  const completed = state.matches.filter(m => Number.isInteger(m.hotScore) && Number.isInteger(m.flyScore));
+  const hotWins = completed.filter(m => m.hotScore > m.flyScore).length;
+  const flyWins = completed.filter(m => m.flyScore > m.hotScore).length;
+  const avg = completed.length ? (completed.reduce((a,m)=>a+m.hotScore+m.flyScore,0)/completed.length).toFixed(1) : '0';
+  els.insights.innerHTML = `
+    <div class="metric"><span>Total Matches</span><b>${state.matches.length}</b></div>
+    <div class="metric"><span>Completed</span><b>${completed.length}</b></div>
+    <div class="metric"><span>HotHeroes Wins</span><b>${hotWins}</b></div>
+    <div class="metric"><span>Ιπτάμενοι Wins</span><b>${flyWins}</b></div>
+    <div class="metric"><span>Avg Total Points</span><b>${avg}</b></div>`;
 
-function hydrateLockedUsername() {
-  const locked = getLockedUsername();
-  if (!locked) return;
-  usernameInput.value = locked;
-  usernameInput.readOnly = true;
-}
-
-const firebaseConfig = window.FIREBASE_CONFIG;
-if (!firebaseConfig?.apiKey || !firebaseConfig?.projectId || !firebaseConfig?.appId) {
-  setStatus("Λείπει το Firebase config. Συμπλήρωσε το στο index.html ❌", false);
-  throw new Error("Missing FIREBASE_CONFIG");
-}
-
-const app = initializeApp(firebaseConfig);
-analyticsSupported().then((ok) => {
-  if (ok) getAnalytics(app);
-}).catch(() => {});
-
-const db = getFirestore(app);
-const rostersRef = doc(db, "basketLeaguePro", "rosters");
-const matchesRef = collection(db, "basketLeaguePro", "matches", "items");
-const messagesRef = collection(db, "basketLeaguePro", "messages", "items");
-const betsRef = collection(db, "basketLeaguePro", "bets", "items");
-const rankingRef = doc(db, "basketLeaguePro", "ranking");
-
-function formatDate(dateValue) {
-  return new Date(`${dateValue}T00:00:00`).toLocaleDateString("el-GR");
-}
-
-function renderRoster(listElement, players) {
-  listElement.innerHTML = "";
-  if (!players.length) {
-    const li = document.createElement("li");
-    li.textContent = "Δεν έχουν οριστεί ακόμα μέλη.";
-    listElement.append(li);
-    return;
-  }
-
-  players.forEach((name) => {
-    const li = document.createElement("li");
-    li.textContent = name;
-    listElement.append(li);
-  });
-}
-
-function renderMatches(matches) {
-  matchesBody.innerHTML = "";
-  if (!matches.length) {
-    const row = document.createElement("tr");
-    row.innerHTML = '<td colspan="6">Δεν υπάρχουν αγώνες ακόμα.</td>';
-    matchesBody.append(row);
-    return;
-  }
-
-  matches.forEach((match) => {
-    const row = document.createElement("tr");
-    const hasScore = Number.isInteger(match.hotScore) && Number.isInteger(match.flyScore);
-    row.innerHTML = `
-      <td>${formatDate(match.date)}</td>
-      <td>${match.time}</td>
-      <td>${match.court}</td>
-      <td>HotHeroes vs Ιπτάμενοι</td>
-      <td>${hasScore ? `${match.hotScore} - ${match.flyScore}` : "-"}</td>
-      <td><span class="status ${hasScore ? "done" : "upcoming"}">${hasScore ? "Completed" : "Upcoming"}</span></td>
-    `;
-    matchesBody.append(row);
-  });
-}
-
-function renderMatchSelect(matches) {
-  matchSelect.innerHTML = "";
-  betMatchSelect.innerHTML = "";
-  if (!matches.length) {
-    const option = document.createElement("option");
-    option.textContent = "Πρώτα πρόσθεσε αγώνα";
-    option.value = "";
-    matchSelect.append(option);
-    betMatchSelect.append(option.cloneNode(true));
-    return;
-  }
-
-  matches.forEach((match) => {
-    const option = document.createElement("option");
-    option.value = match.id;
-    option.textContent = `${formatDate(match.date)} ${match.time} • ${match.court}`;
-    matchSelect.append(option);
-    betMatchSelect.append(option.cloneNode(true));
-  });
-}
-
-function renderBets(matches, bets) {
-  betsBody.innerHTML = "";
-  if (!bets.length) {
-    const row = document.createElement("tr");
-    row.innerHTML = '<td colspan="5">Δεν υπάρχουν στοιχήματα ακόμα.</td>';
-    betsBody.append(row);
-    return;
-  }
-
-  const matchesById = new Map(matches.map((m) => [m.id, m]));
-  const ordered = [...bets].sort((a, b) => b.createdAt - a.createdAt).slice(0, 150);
-  ordered.forEach((bet) => {
-    const match = matchesById.get(bet.matchId);
-    const row = document.createElement("tr");
-    const matchLabel = match
-      ? `${formatDate(match.date)} ${match.time} • ${match.court}`
-      : "Αγώνας που αφαιρέθηκε";
-
-    let resultLabel = "Pending";
-    let resultClass = "upcoming";
-    if (match && Number.isInteger(match.hotScore) && Number.isInteger(match.flyScore)) {
-      const correct = match.hotScore === bet.predHot && match.flyScore === bet.predFly;
-      resultLabel = correct ? "Won" : "Lost";
-      resultClass = correct ? "done" : "lost";
-    }
-
-    row.innerHTML = `
-      <td>${matchLabel}</td>
-      <td>${bet.user}</td>
-      <td>${bet.predHot} - ${bet.predFly}</td>
-      <td>${euroFormatter.format(Number(bet.stake) || 0)}</td>
-      <td><span class="status ${resultClass}">${resultLabel}</span></td>
-    `;
-    betsBody.append(row);
-  });
-}
-
-function renderRankingPlayerSelect() {
-  const players = [
-    ...state.rosters.HotHeroes,
-    ...state.rosters["Ιπτάμενοι"]
-  ].sort((a, b) => a.localeCompare(b, "el"));
-
-  rankingPlayerSelect.innerHTML = "";
-
-  if (!players.length) {
-    const option = document.createElement("option");
-    option.value = "";
-    option.textContent = "Πρώτα πρόσθεσε παίκτες";
-    rankingPlayerSelect.append(option);
-    rankingPlayerSelect.disabled = true;
-    return;
-  }
-
-  rankingPlayerSelect.disabled = false;
-  players.forEach((player) => {
-    const option = document.createElement("option");
-    option.value = player;
-    option.textContent = player;
-    rankingPlayerSelect.append(option);
-  });
-}
-
-function renderInsights(matches) {
-  insTotal.textContent = String(matches.length);
-  let hotWins = 0;
-  let flyWins = 0;
-  let totalPoints = 0;
-  let completed = 0;
-
-  matches.forEach((m) => {
+  els.matchId.innerHTML = state.matches.map(m => `<option value="${m.id}">${fmtDate(m.date)} ${m.time} • ${m.court}</option>`).join('') || '<option value="">Create a match first</option>';
+  els.matchesBody.innerHTML = state.matches.map(m => {
     const done = Number.isInteger(m.hotScore) && Number.isInteger(m.flyScore);
-    if (!done) return;
-    completed += 1;
-    totalPoints += m.hotScore + m.flyScore;
-    if (m.hotScore > m.flyScore) hotWins += 1;
-    if (m.flyScore > m.hotScore) flyWins += 1;
-  });
+    return `<tr><td>${fmtDate(m.date)}</td><td>${m.time}</td><td>${m.court}</td><td>${done ? `${m.hotScore}-${m.flyScore}`:'-'}</td><td><span class="status ${done?'done':'upcoming'}">${done?'Completed':'Upcoming'}</span></td></tr>`;
+  }).join('') || '<tr><td colspan="5">No matches yet.</td></tr>';
 
-  insHotWins.textContent = String(hotWins);
-  insFlyWins.textContent = String(flyWins);
-  insAvgTotal.textContent = completed ? (totalPoints / completed).toFixed(1) : "0";
+  els.messages.innerHTML = state.messages.map(m => `<li><b>${m.user}</b><br>${m.text}<br><small>${new Date(m.createdAt).toLocaleString()}</small></li>`).join('') || '<li>No messages yet.</li>';
 }
 
-function createMessageElement(message) {
-  const item = document.createElement("li");
-  item.className = "chat-item";
-  const header = document.createElement("div");
-  header.className = "chat-item-header";
-  const author = document.createElement("strong");
-  author.textContent = message.user;
-  const timestamp = document.createElement("time");
-  timestamp.textContent = new Date(message.createdAt).toLocaleString("el-GR", {
-    dateStyle: "short",
-    timeStyle: "short"
-  });
-  const text = document.createElement("p");
-  text.textContent = message.text;
-  header.append(author, timestamp);
-  item.append(header, text);
-  return item;
-}
+async function refresh(){ render(await api('state')); }
 
-
-function calculatePlayerRankings() {
-  const completedMatches = state.matches.filter((m) => Number.isInteger(m.hotScore) && Number.isInteger(m.flyScore));
-  const hotWins = completedMatches.filter((m) => m.hotScore > m.flyScore).length;
-  const flyWins = completedMatches.filter((m) => m.flyScore > m.hotScore).length;
-
-  const allPlayers = [
-    ...state.rosters.HotHeroes.map((name) => ({ name, team: "HotHeroes" })),
-    ...state.rosters["Ιπτάμενοι"].map((name) => ({ name, team: "Ιπτάμενοι" }))
-  ];
-
-  return allPlayers
-    .map((player) => {
-      const teamWins = player.team === "HotHeroes" ? hotWins : flyWins;
-      const base = 50;
-      const formScore = teamWins * 12;
-      const activityScore = completedMatches.length * 4;
-      const consistencyBoost = Math.max(0, 12 - Math.abs(hotWins - flyWins) * 2);
-      const manualBoost = Number(state.manualPoints[player.name]) || 0;
-      const totalScore = base + formScore + activityScore + consistencyBoost + manualBoost;
-      return { ...player, score: totalScore };
-    })
-    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, "el"));
-}
-
-function renderRankings() {
-  rankingList.innerHTML = "";
-  const ranking = calculatePlayerRankings();
-
-  if (!ranking.length) {
-    const empty = document.createElement("li");
-    empty.className = "ranking-item";
-    empty.innerHTML = '<span class="rank-player"><strong>Δεν υπάρχουν παίκτες ακόμα</strong><span>Πρόσθεσε μέλη από το panel διαχείρισης για να εμφανιστεί η κατάταξη.</span></span>';
-    rankingList.append(empty);
-    return;
-  }
-
-  ranking.slice(0, 12).forEach((player, index) => {
-    const item = document.createElement("li");
-    item.className = `ranking-item ${index < 3 ? "top" : ""}`;
-    item.innerHTML = `
-      <span class="rank-number">${index + 1}</span>
-      <span class="rank-player">
-        <strong>${player.name}</strong>
-        <span>${player.team}</span>
-      </span>
-      <span class="rank-score">${player.score} pts</span>
-    `;
-    rankingList.append(item);
-  });
-}
-
-function renderMessages(messages) {
-  const term = chatSearchInput.value.trim().toLowerCase();
-  const filtered = term
-    ? messages.filter((m) => m.user.toLowerCase().includes(term) || m.text.toLowerCase().includes(term))
-    : messages;
-
-  chatCounter.textContent = `${filtered.length} μηνύματα`;
-  chatMessages.innerHTML = "";
-
-  if (filtered.length === 0) {
-    const emptyState = document.createElement("li");
-    emptyState.className = "chat-item";
-    emptyState.textContent = term ? "Δεν βρέθηκαν μηνύματα για αυτή την αναζήτηση." : "Δεν υπάρχουν ακόμα μηνύματα. Γίνε ο πρώτος!";
-    chatMessages.append(emptyState);
-    return;
-  }
-
-  filtered.forEach((message) => chatMessages.append(createMessageElement(message)));
-}
-
-function renderAll() {
-  const orderedMatches = [...state.matches].sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
-  const orderedMessages = [...state.messages].sort((a, b) => b.createdAt - a.createdAt).slice(0, 100);
-  renderRoster(hotHeroesList, state.rosters.HotHeroes);
-  renderRoster(iptamenoiList, state.rosters["Ιπτάμενοι"]);
-  renderMatches(orderedMatches);
-  renderMatchSelect(orderedMatches);
-  renderBets(orderedMatches, state.bets);
-  renderRankingPlayerSelect();
-  renderInsights(orderedMatches);
-  renderMessages(orderedMessages);
-  renderRankings();
-}
-
-let listenersReady = { rosters: false, matches: false, messages: false, bets: false, ranking: false };
-function markReady(key) {
-  listenersReady[key] = true;
-  if (Object.values(listenersReady).every(Boolean)) {
-    setStatus("Συνδεδεμένο με Firebase ✅", true);
-  }
-}
-
-onSnapshot(rostersRef, (snap) => {
-  const data = snap.data() || {};
-  state.rosters = {
-    HotHeroes: Array.isArray(data.HotHeroes) ? data.HotHeroes : [],
-    "Ιπτάμενοι": Array.isArray(data["Ιπτάμενοι"]) ? data["Ιπτάμενοι"] : []
-  };
-  markReady("rosters");
-  renderAll();
-}, (error) => setStatus(`Firebase rosters error ❌ (${error.message})`, false));
-
-onSnapshot(matchesRef, (snap) => {
-  state.matches = snap.docs
-    .map((d) => ({ id: d.id, ...d.data() }))
-    .sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
-  markReady("matches");
-  renderAll();
-}, (error) => setStatus(`Firebase matches error ❌ (${error.message})`, false));
-
-onSnapshot(query(messagesRef, orderBy("createdAt", "desc")), (snap) => {
-  state.messages = snap.docs
-    .map((d) => ({ id: d.id, ...d.data() }))
-    .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
-  markReady("messages");
-  renderAll();
-}, (error) => setStatus(`Firebase chat error ❌ (${error.message})`, false));
-
-onSnapshot(query(betsRef, orderBy("createdAt", "desc")), (snap) => {
-  state.bets = snap.docs
-    .map((d) => ({ id: d.id, ...d.data() }))
-    .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
-  markReady("bets");
-  renderAll();
-}, (error) => setStatus(`Firebase betting error ❌ (${error.message})`, false));
-
-onSnapshot(rankingRef, (snap) => {
-  const data = snap.data() || {};
-  state.manualPoints = typeof data.points === "object" && data.points !== null ? data.points : {};
-  markReady("ranking");
-  renderAll();
-}, (error) => setStatus(`Firebase ranking error ❌ (${error.message})`, false));
-
-playerForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const team = document.getElementById("team-select").value;
-  const input = document.getElementById("player-name");
-  const name = normalizeText(input.value, MAX_PLAYER_NAME_LENGTH);
-  if (!name) return;
-
-  const exists = state.rosters[team].some((player) => player.toLocaleLowerCase("el-GR") === name.toLocaleLowerCase("el-GR"));
-  if (exists) {
-    setStatus(`Ο παίκτης ${name} υπάρχει ήδη στην ομάδα.`, false);
-    return;
-  }
-
-  await setDoc(rostersRef, { [team]: arrayUnion(name) }, { merge: true });
-  input.value = "";
+document.getElementById('player-form').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  await api('players', {method:'POST', body:JSON.stringify({team:document.getElementById('team').value, name:document.getElementById('player').value})});
+  e.target.reset(); refresh();
 });
 
-matchForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const date = document.getElementById("match-date").value;
-  const time = document.getElementById("match-time").value;
-  const court = document.getElementById("match-court").value.trim();
-  if (!date || !time || !court) return;
-
-  await addDoc(matchesRef, { date, time, court, hotScore: null, flyScore: null, createdAt: Date.now() });
-  matchForm.reset();
+document.getElementById('match-form').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  await api('matches', {method:'POST', body:JSON.stringify({date:date.value,time:time.value,court:court.value})});
+  e.target.reset(); refresh();
 });
 
-scoreForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const matchId = matchSelect.value;
-  const hotScore = Number.parseInt(document.getElementById("score-hot").value, 10);
-  const flyScore = Number.parseInt(document.getElementById("score-fly").value, 10);
-  if (!matchId || Number.isNaN(hotScore) || Number.isNaN(flyScore)) return;
-
-  await updateDoc(doc(matchesRef, matchId), { hotScore, flyScore });
-  scoreForm.reset();
+document.getElementById('score-form').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  await api('scores', {method:'POST', body:JSON.stringify({matchId:els.matchId.value,hotScore:hot.value,flyScore:fly.value})});
+  e.target.reset(); refresh();
 });
 
-betForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const matchId = betMatchSelect.value;
-  const user = document.getElementById("bet-user").value.trim();
-  const predHot = Number.parseInt(document.getElementById("bet-hot").value, 10);
-  const predFly = Number.parseInt(document.getElementById("bet-fly").value, 10);
-  const stake = Number.parseFloat(document.getElementById("bet-stake").value);
-  const normalizedStake = Number(stake.toFixed(2));
-
-  if (!matchId || !user || Number.isNaN(predHot) || Number.isNaN(predFly) || Number.isNaN(stake) || normalizedStake <= 0) {
-    return;
-  }
-
-  await addDoc(betsRef, { matchId, user, predHot, predFly, stake: normalizedStake, createdAt: Date.now() });
-  betForm.reset();
+document.getElementById('chat-form').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  await api('chat', {method:'POST', body:JSON.stringify({user:user.value,text:text.value})});
+  text.value = ''; refresh();
 });
 
-rankingPointsForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const playerName = rankingPlayerSelect.value;
-  const pointsToAdd = Number.parseInt(rankingPointsInput.value, 10);
-  if (!playerName || Number.isNaN(pointsToAdd) || pointsToAdd <= 0) return;
+document.getElementById('clear-chat').addEventListener('click', async ()=>{ await api('chat',{method:'DELETE'}); refresh(); });
 
-  const code = window.prompt("Βάλε κωδικό για προσθήκη πόντων ranking:");
-  if (code === null) return;
-  if (code !== RANKING_ADMIN_CODE) {
-    setStatus("Λάθος κωδικός ranking ❌", false);
-    return;
-  }
-
-  const nextPoints = { ...state.manualPoints };
-  nextPoints[playerName] = (Number(nextPoints[playerName]) || 0) + pointsToAdd;
-  await setDoc(rankingRef, { points: nextPoints }, { merge: true });
-  rankingPointsForm.reset();
-  setStatus(`Προστέθηκαν ${pointsToAdd} πόντοι στον ${playerName} ✅`, true);
-});
-
-rankingResetButton.addEventListener("click", async () => {
-  const code = window.prompt("Βάλε κωδικό για reset ranking πόντων:");
-  if (code === null) return;
-  if (code !== RANKING_ADMIN_CODE) {
-    setStatus("Λάθος κωδικός ranking ❌", false);
-    return;
-  }
-
-  const ok = window.confirm("Να γίνει reset σε όλους τους extra πόντους ranking;");
-  if (!ok) return;
-
-  await setDoc(rankingRef, { points: {} }, { merge: true });
-  setStatus("Έγινε reset στους extra πόντους ranking ✅", true);
-});
-
-chatForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  let user = normalizeText(usernameInput.value, MAX_PLAYER_NAME_LENGTH);
-  const text = normalizeText(messageInput.value, MAX_CHAT_MESSAGE_LENGTH);
-  if (!user || !text) return;
-
-  const locked = getLockedUsername();
-  if (!locked) {
-    lockUsername(user);
-  } else {
-    user = locked;
-  }
-
-  await addDoc(messagesRef, { user, text, createdAt: Date.now() });
-  messageInput.value = "";
-});
-
-clearButton.addEventListener("click", async () => {
-  const password = window.prompt("Βάλε κωδικό για καθαρισμό chat:");
-  if (password === null) return;
-  if (password !== CHAT_RESET_PASSWORD) {
-    setStatus("Λάθος κωδικός καθαρισμού chat ❌", false);
-    return;
-  }
-
-  const ok = window.confirm("Είσαι σίγουρος ότι θέλεις να διαγράψεις όλα τα μηνύματα;");
-  if (!ok) return;
-
-  const snap = await getDocs(messagesRef);
-  const batch = writeBatch(db);
-  snap.forEach((item) => batch.delete(item.ref));
-  await batch.commit();
-  setStatus("Το chat καθαρίστηκε επιτυχώς ✅", true);
-});
-
-chatSearchInput.addEventListener("input", () => renderAll());
-initSiteLock();
-hydrateLockedUsername();
+refresh();
+setInterval(refresh, 5000);

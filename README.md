@@ -1,44 +1,26 @@
-# BasketLeaguePro
+# BasketLeaguePro v3
 
-Professional single-page website for the basketball rivalry between **HotHeroes** and **Ιπτάμενοι**.
+A complete aggressive refactor of the app into a cleaner local-first architecture.
 
-## Major upgrade
-- Upgraded chat UX with immutable username lock per browser, live search, and message counter.
-- Added live **Game Insights** dashboard (total matches, wins per team, average total points).
-- Removed admin login and admin commands from the interface.
-- Kept protected chat reset with password.
-- Added hardened local API validation, duplicate-prevention for roster entries, and `/api/health` endpoint.
-- Added `package.json` with `start`, `dev`, and `check` scripts for easier maintenance.
+## What's new in v3
+- Rebuilt UI with a modern dashboard layout.
+- Simplified client: one API utility + declarative render pipeline.
+- Unified operations for players, matches, scores, and live chat.
+- Real-time-like refresh loop for shared views (5s polling).
+- Hardened backend validations remain in `server.js`.
 
-## Firebase Setup (configured)
-The app is prefilled with your Firebase project config:
-- project: `basket-clash-7901c`
-- app id: `1:307971899685:web:8143142e3fbe3526ef5acc`
-
-The frontend uses:
-- Firebase **Cloud Firestore** for shared live sync (chat, rosters, matches, scores)
-- Firebase Analytics initialization (when supported by browser)
-
-## What to enable in Firebase Console
-1. Cloud Firestore must be enabled.
-2. Firestore Rules must allow the app to read/write (at least for testing).
-
-Example temporary test rules:
-```txt
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
-    }
-  }
-}
+## Run
+```bash
+npm install
+npm run start
 ```
+Open `http://localhost:4173`.
 
-## Chat reset password
-- Current password: `HotHeroes2026!`
-- You can change it in `index.html` via `window.CHAT_RESET_PASSWORD`.
-
-## GitHub Pages
-- Include: `index.html`, `404.html`, `styles.css`, `script.js`
-- Open: `https://linuxmanual.github.io/BasketLeaguePro/`
+## API endpoints
+- `GET /api/state`
+- `POST /api/players`
+- `POST /api/matches`
+- `POST /api/scores`
+- `POST /api/chat`
+- `DELETE /api/chat`
+- `GET /api/health`
