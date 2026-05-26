@@ -1,8 +1,39 @@
 {
   "rosters": {
-    "HotHeroes": [],
-    "Ιπτάμενοι": []
+    "HotHeroes": [
+      {"name":"Νίκος Γκάλης","number":"0","position":"SG"},
+      {"name":"Παναγιώτης Γιαννάκης","number":"0","position":"SG"},
+      {"name":"Φάνης Χριστοδούλου","number":"0","position":"SG"}
+    ],
+    "Ιπτάμενοι": [
+      {"name":"Γιάννης Αντετοκούνμπο","number":"0","position":"SG"},
+      {"name":"Βασίλης Σπανούλης","number":"0","position":"SG"},
+      {"name":"Δημήτρης Διαμαντίδης","number":"0","position":"SG"}
+    ]
   },
-  "matches": [],
-  "messages": []
+  "matches": [
+    {
+      "id": "match-1",
+      "date": "2026-06-01",
+      "time": "19:00",
+      "court": "ΟΑΚΑ",
+      "hotScore": 88,
+      "flyScore": 82
+    },
+    {
+      "id": "match-2",
+      "date": "2026-06-08",
+      "time": "20:30",
+      "court": "ΣΕΦ",
+      "hotScore": null,
+      "flyScore": null
+    }
+  ],
+  "messages": [
+    {
+      "user": "System",
+      "text": "Καλώς ορίσατε στο BasketLeaguePro! Η σεζόν ξεκίνησε.",
+      "createdAt": 1779789600000
+    }
+  ]
 }
