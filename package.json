@@ -1,8 +1,8 @@
 {
   "name": "basketleaguepro",
-  "version": "5.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "BasketLeaguePro local-first league dashboard",
+  "description": "BasketLeaguePro V2 with secure entry gate, admin-locked resets, and player ranking points system",
   "type": "commonjs",
   "engines": {
     "node": ">=20"
