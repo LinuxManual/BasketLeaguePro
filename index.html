@@ -20,7 +20,11 @@
         <a href="#matches">Αγώνες</a>
         <a href="#chat">Chat</a>
       </nav>
+      <div class="topbar-actions">
+      <button id="theme-toggle" class="icon-button" type="button" title="Theme" aria-label="Εναλλαγή θέματος">◐</button>
+      <button id="export-state" class="icon-button" type="button" title="Export" aria-label="Εξαγωγή δεδομένων">⇩</button>
       <button id="refresh" class="icon-button" type="button" title="Ανανέωση" aria-label="Ανανέωση">↻</button>
+    </div>
     </header>
 
     <main>
@@ -135,6 +139,10 @@
 
       <section class="schedule-section" id="matches" aria-labelledby="matches-title">
         <div class="section-heading">
+          <div class="search-wrap">
+            <label for="match-search" class="sr-only">Αναζήτηση γηπέδου</label>
+            <input id="match-search" type="search" placeholder="Αναζήτηση γηπέδου..." />
+          </div>
           <div>
             <p class="section-label">Fixtures</p>
             <h2 id="matches-title">Πρόγραμμα αγώνων</h2>
@@ -202,7 +210,7 @@
             <textarea id="text" required maxlength="500" rows="3" placeholder="Μήνυμα"></textarea>
             <button type="submit">Αποστολή</button>
           </form>
-          <ul id="messages" class="message-list" aria-live="polite"></ul>
+          <div class="chat-tools"><input id="chat-search" type="search" placeholder="Αναζήτηση μηνυμάτων..." /></div><ul id="messages" class="message-list" aria-live="polite"></ul>
         </article>
       </section>
     </main>
