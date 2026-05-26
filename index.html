@@ -1,213 +1,35 @@
 <!doctype html>
 <html lang="el">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#070d1a" />
-    <meta name="description" content="BasketLeague Pro dashboard for rosters, matches, scores, and team chat." />
-    <title>BasketLeague Pro 4.0.1</title>
-    <link rel="stylesheet" href="./styles.css?v=4.0.1" />
-  </head>
-  <body>
-    <header class="topbar">
-      <a href="#dashboard" class="brand" aria-label="BasketLeague Pro home">
-        <span class="brand-mark">BLP</span>
-        <span>BasketLeague Pro</span>
-      </a>
-      <nav aria-label="Κύρια πλοήγηση">
-        <a href="#dashboard">Dashboard</a>
-        <a href="#rosters">Ρόστερ</a>
-        <a href="#matches">Αγώνες</a>
-        <a href="#chat">Chat</a>
-      </nav>
-      <button id="refresh" class="icon-button" type="button" title="Ανανέωση" aria-label="Ανανέωση">↻</button>
-    </header>
-
-    <main>
-      <section class="hero" id="dashboard" aria-labelledby="page-title">
-        <div class="hero-copy">
-          <p class="kicker">Season Command Center</p>
-          <h1 id="page-title">HotHeroes vs Ιπτάμενοι</h1>
-          <p class="hero-text">Ζωντανός έλεγχος για ρόστερ, πρόγραμμα, σκορ και ομάδα μέσα από ένα καθαρό dashboard.</p>
-          <div class="hero-actions">
-            <a class="button primary" href="#matches">Νέος αγώνας</a>
-            <a class="button secondary" href="#rosters">Προσθήκη παίκτη</a>
-          </div>
-        </div>
-
-        <div class="court-visual" aria-hidden="true">
-          <div class="court-line center"></div>
-          <div class="court-line ring"></div>
-          <div class="court-line key left"></div>
-          <div class="court-line key right"></div>
-          <div class="court-label hot">HotHeroes</div>
-          <div class="court-label fly">Ιπτάμενοι</div>
-        </div>
-
-        <div class="metrics-grid" id="insights" aria-live="polite"></div>
-      </section>
-
-      <section class="workspace-grid" id="rosters">
-        <article class="panel standings-panel" aria-labelledby="standings-title">
-          <div class="panel-heading">
-            <div>
-              <p class="section-label">League</p>
-              <h2 id="standings-title">Βαθμολογία</h2>
-            </div>
-            <span class="pill" id="leader-pill">-</span>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Ομάδα</th>
-                  <th>Αγ.</th>
-                  <th>Νίκες</th>
-                  <th>Πόντοι</th>
-                  <th>Διαφ.</th>
-                </tr>
-              </thead>
-              <tbody id="standings-body"></tbody>
-            </table>
-          </div>
-        </article>
-
-        <article class="panel roster-panel" aria-labelledby="rosters-title">
-          <div class="panel-heading">
-            <div>
-              <p class="section-label">Teams</p>
-              <h2 id="rosters-title">Ρόστερ</h2>
-            </div>
-            <span class="pill" id="roster-count">0 παίκτες</span>
-          </div>
-          <div class="roster-grid">
-            <section class="team-column" aria-labelledby="hot-title">
-              <div class="team-heading">
-                <h3 id="hot-title">HotHeroes</h3>
-                <span id="hot-count">0</span>
-              </div>
-              <ul id="hot-list" class="player-list"></ul>
-            </section>
-            <section class="team-column" aria-labelledby="fly-title">
-              <div class="team-heading">
-                <h3 id="fly-title">Ιπτάμενοι</h3>
-                <span id="fly-count">0</span>
-              </div>
-              <ul id="fly-list" class="player-list"></ul>
-            </section>
-          </div>
-        </article>
-
-        <article class="panel action-panel" aria-labelledby="actions-title">
-          <div class="panel-heading">
-            <div>
-              <p class="section-label">Quick actions</p>
-              <h2 id="actions-title">Διαχείριση</h2>
-            </div>
-          </div>
-
-          <form id="player-form" class="stacked-form">
-            <label for="team">Ομάδα</label>
-            <select id="team" required>
-              <option>HotHeroes</option>
-              <option>Ιπτάμενοι</option>
-            </select>
-            <label for="player">Παίκτης</label>
-            <div class="inline-fields">
-              <input id="player" maxlength="80" required autocomplete="off" placeholder="Όνομα παίκτη" />
-              <button type="submit">Προσθήκη</button>
-            </div>
-          </form>
-
-          <form id="match-form" class="stacked-form">
-            <label for="date">Ημερομηνία</label>
-            <input type="date" id="date" required />
-            <label for="time">Ώρα</label>
-            <input type="time" id="time" required />
-            <label for="court">Γήπεδο</label>
-            <div class="inline-fields">
-              <input id="court" maxlength="80" required autocomplete="off" placeholder="Γήπεδο" />
-              <button type="submit">Δημιουργία</button>
-            </div>
-          </form>
-        </article>
-      </section>
-
-      <section class="schedule-section" id="matches" aria-labelledby="matches-title">
-        <div class="section-heading">
-          <div>
-            <p class="section-label">Fixtures</p>
-            <h2 id="matches-title">Πρόγραμμα αγώνων</h2>
-          </div>
-          <div class="segmented" role="tablist" aria-label="Φίλτρο αγώνων">
-            <button type="button" class="is-active" data-filter="all">Όλοι</button>
-            <button type="button" data-filter="upcoming">Επόμενοι</button>
-            <button type="button" data-filter="completed">Τελικοί</button>
-          </div>
-        </div>
-        <div class="panel">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Ημερομηνία</th>
-                  <th>Ώρα</th>
-                  <th>Γήπεδο</th>
-                  <th>Σκορ</th>
-                  <th>Status</th>
-                  <th aria-label="Ενέργειες"></th>
-                </tr>
-              </thead>
-              <tbody id="matches-body"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <section class="workspace-grid compact" id="chat">
-        <article class="panel score-panel" aria-labelledby="score-title">
-          <div class="panel-heading">
-            <div>
-              <p class="section-label">Score desk</p>
-              <h2 id="score-title">Καταχώρηση σκορ</h2>
-            </div>
-          </div>
-          <form id="score-form" class="stacked-form">
-            <label for="match-id">Αγώνας</label>
-            <select id="match-id" required></select>
-            <div class="score-fields">
-              <label>
-                HotHeroes
-                <input type="number" id="hot" min="0" max="300" required placeholder="0" />
-              </label>
-              <label>
-                Ιπτάμενοι
-                <input type="number" id="fly" min="0" max="300" required placeholder="0" />
-              </label>
-            </div>
-            <button type="submit">Αποθήκευση σκορ</button>
-          </form>
-        </article>
-
-        <article class="panel chat-panel" aria-labelledby="chat-title">
-          <div class="panel-heading">
-            <div>
-              <p class="section-label">Team room</p>
-              <h2 id="chat-title">Chat ομάδας</h2>
-            </div>
-            <button id="clear-chat" class="ghost danger" type="button">Καθαρισμός</button>
-          </div>
-          <form id="chat-form" class="chat-form">
-            <input id="user" required maxlength="80" autocomplete="name" placeholder="Όνομα" />
-            <textarea id="text" required maxlength="500" rows="3" placeholder="Μήνυμα"></textarea>
-            <button type="submit">Αποστολή</button>
-          </form>
-          <ul id="messages" class="message-list" aria-live="polite"></ul>
-        </article>
-      </section>
-    </main>
-
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <script type="module" src="./script.js?v=4.0.1"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#101828" />
+  <meta name="description" content="BasketLeague Pro v5 dashboard για ρόστερ, αγώνες, σκορ, analytics και team room." />
+  <title>BasketLeague Pro 5.0</title>
+  <link rel="stylesheet" href="./styles.css?v=5.0.0" />
+</head>
+<body>
+  <header class="topbar">
+    <a href="#dashboard" class="brand" aria-label="BasketLeague Pro home"><span class="brand-mark">BLP</span><span>BasketLeague Pro</span></a>
+    <nav aria-label="Κύρια πλοήγηση"><a href="#dashboard">Dashboard</a><a href="#rosters">Ρόστερ</a><a href="#matches">Αγώνες</a><a href="#analytics">Analytics</a><a href="#chat">Chat</a></nav>
+    <div class="topbar-actions"><button id="theme-toggle" class="icon-button" type="button" title="Theme">◐</button><button id="export-state" class="icon-button" type="button" title="Export">⇩</button><button id="refresh" class="icon-button" type="button" title="Ανανέωση">↻</button></div>
+  </header>
+  <main>
+    <section class="hero" id="dashboard">
+      <div class="hero-copy"><p class="kicker">Season Command Center v5</p><h1>HotHeroes vs Ιπτάμενοι</h1><p class="hero-text">Πιο γρήγορο, πιο καθαρό κέντρο ελέγχου για αγώνες, παίκτες, φόρμα ομάδας και αποφάσεις πριν το τζάμπολ.</p><div class="hero-actions"><a class="button primary" href="#matches">Νέος αγώνας</a><a class="button secondary" href="#analytics">Πλάνο αγώνα</a></div></div>
+      <div class="court-visual" aria-hidden="true"><div class="court-line center"></div><div class="court-line ring"></div><div class="court-line key left"></div><div class="court-line key right"></div><div class="court-ball"></div><div class="court-label hot">HotHeroes</div><div class="court-label fly">Ιπτάμενοι</div></div>
+      <div class="metrics-grid" id="insights" aria-live="polite"></div>
+    </section>
+    <section class="workspace-grid" id="rosters">
+      <article class="panel"><div class="panel-heading"><div><p class="section-label">League</p><h2>Βαθμολογία</h2></div><span class="pill" id="leader-pill">-</span></div><div class="table-wrap"><table><thead><tr><th>Ομάδα</th><th>Αγ.</th><th>Νίκες</th><th>Πόντοι</th><th>Διαφ.</th><th>Φόρμα</th></tr></thead><tbody id="standings-body"></tbody></table></div></article>
+      <article class="panel"><div class="panel-heading"><div><p class="section-label">Teams</p><h2>Ρόστερ</h2></div><span class="pill" id="roster-count">0 παίκτες</span></div><div class="roster-grid"><section class="team-column"><div class="team-heading"><h3>HotHeroes</h3><span id="hot-count">0</span></div><ul id="hot-list" class="player-list"></ul></section><section class="team-column"><div class="team-heading"><h3>Ιπτάμενοι</h3><span id="fly-count">0</span></div><ul id="fly-list" class="player-list"></ul></section></div></article>
+      <article class="panel action-panel"><div class="panel-heading"><div><p class="section-label">Quick actions</p><h2>Διαχείριση</h2></div></div><form id="player-form" class="stacked-form"><label for="team">Ομάδα</label><select id="team" required><option>HotHeroes</option><option>Ιπτάμενοι</option></select><label for="player">Παίκτης</label><div class="inline-fields"><input id="player" maxlength="80" required autocomplete="off" placeholder="Όνομα παίκτη" /><button type="submit">Προσθήκη</button></div></form><form id="match-form" class="stacked-form"><label for="date">Ημερομηνία</label><input type="date" id="date" required /><label for="time">Ώρα</label><input type="time" id="time" required /><label for="court">Γήπεδο</label><div class="inline-fields"><input id="court" maxlength="80" required autocomplete="off" placeholder="Γήπεδο" /><button type="submit">Δημιουργία</button></div></form></article>
+    </section>
+    <section id="matches" class="schedule-section"><div class="section-heading"><div><p class="section-label">Fixtures</p><h2>Πρόγραμμα αγώνων</h2></div><div class="toolbar"><input id="match-search" type="search" placeholder="Αναζήτηση γηπέδου..." /><div class="segmented"><button type="button" class="is-active" data-filter="all">Όλοι</button><button type="button" data-filter="upcoming">Επόμενοι</button><button type="button" data-filter="completed">Τελικοί</button></div></div></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>Ημερομηνία</th><th>Ώρα</th><th>Γήπεδο</th><th>Σκορ</th><th>Status</th><th></th></tr></thead><tbody id="matches-body"></tbody></table></div></div></section>
+    <section id="analytics" class="analytics-grid"><article class="panel"><div class="panel-heading"><div><p class="section-label">Coach mode</p><h2>Πλάνο αγώνα</h2></div><span class="pill" id="next-match-pill">-</span></div><div class="coach-board" id="coach-board"></div></article><article class="panel"><div class="panel-heading"><div><p class="section-label">Momentum</p><h2>Σύγκριση ομάδων</h2></div></div><div id="team-comparison" class="comparison"></div></article></section>
+    <section class="workspace-grid compact" id="chat"><article class="panel"><div class="panel-heading"><div><p class="section-label">Score desk</p><h2>Καταχώρηση σκορ</h2></div></div><form id="score-form" class="stacked-form"><label for="match-id">Αγώνας</label><select id="match-id" required></select><div class="score-fields"><label>HotHeroes<input type="number" id="hot" min="0" max="300" required placeholder="0" /></label><label>Ιπτάμενοι<input type="number" id="fly" min="0" max="300" required placeholder="0" /></label></div><button type="submit">Αποθήκευση σκορ</button></form></article><article class="panel"><div class="panel-heading"><div><p class="section-label">Team room</p><h2>Chat ομάδας</h2></div><button id="clear-chat" class="ghost danger" type="button">Καθαρισμός</button></div><form id="chat-form" class="chat-form"><input id="user" required maxlength="80" autocomplete="name" placeholder="Όνομα" /><textarea id="text" required maxlength="500" rows="3" placeholder="Μήνυμα"></textarea><button type="submit">Αποστολή</button></form><div class="chat-tools"><input id="chat-search" type="search" placeholder="Αναζήτηση μηνυμάτων..." /></div><ul id="messages" class="message-list" aria-live="polite"></ul></article></section>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="./script.js?v=5.0.0"></script>
+</body>
 </html>
