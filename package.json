@@ -1,8 +1,8 @@
 {
   "name": "basketleaguepro",
-  "version": "7.0.0",
+  "version": "8.0.0",
   "private": true,
-  "description": "BasketLeaguePro ultra dashboard with Firebase realtime sync and command center",
+  "description": "BasketLeaguePro v8 elite dashboard with premium mobile UX, realtime sync, and ultra controls",
   "type": "commonjs",
   "engines": {
     "node": ">=20"
