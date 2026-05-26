@@ -2,20 +2,18 @@
 
 Professional single-page website for the basketball rivalry between **HotHeroes** and **Ιπτάμενοι**.
 
-## Major upgrade
-- Upgraded chat UX with immutable username lock per browser, live search, and message counter.
-- Added live **Game Insights** dashboard (total matches, wins per team, average total points).
-- Removed admin login and admin commands from the interface.
-- Kept protected chat reset with password.
+## Major upgrade (v5.1)
+- Re-enabled **Firebase-first** data layer across the whole app (rosters, matches, scores, chat, dashboard state).
+- Automatic fallback strategy:
+  1. Firebase Cloud Firestore
+  2. Local API (`/api/*`)
+  3. Browser local storage
+- Updated UI versioning to `5.1`.
 
-## Firebase Setup (configured)
+## Firebase configuration
 The app is prefilled with your Firebase project config:
 - project: `basket-clash-7901c`
 - app id: `1:307971899685:web:8143142e3fbe3526ef5acc`
-
-The frontend uses:
-- Firebase **Cloud Firestore** for shared live sync (chat, rosters, matches, scores)
-- Firebase Analytics initialization (when supported by browser)
 
 ## What to enable in Firebase Console
 1. Cloud Firestore must be enabled.
@@ -33,10 +31,8 @@ service cloud.firestore {
 }
 ```
 
-## Chat reset password
-- Current password: `HotHeroes2026!`
-- You can change it in `index.html` via `window.CHAT_RESET_PASSWORD`.
-
-## GitHub Pages
-- Include: `index.html`, `404.html`, `styles.css`, `script.js`
-- Open: `https://linuxmanual.github.io/BasketLeaguePro/`
+## Run locally
+```bash
+node server.js
+# open http://localhost:4173
+```
