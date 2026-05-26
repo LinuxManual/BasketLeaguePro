@@ -1,6 +1,6 @@
 {
   "name": "basketleaguepro",
-  "version": "4.0.1",
+  "version": "5.0.0",
   "private": true,
   "description": "BasketLeaguePro local-first league dashboard",
   "type": "commonjs",
@@ -10,6 +10,6 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "check": "node --check server.js"
+    "check": "node --check server.js && node --check script.js"
   }
 }
