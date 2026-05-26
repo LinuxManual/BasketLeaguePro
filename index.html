@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#101828" />
-  <meta name="description" content="BasketLeague Pro v5 dashboard για ρόστερ, αγώνες, σκορ, analytics και team room." />
-  <title>BasketLeague Pro 5.0</title>
-  <link rel="stylesheet" href="./styles.css?v=5.0.0" />
+  <meta name="description" content="BasketLeague Pro v6 dashboard με Firebase cloud sync για ρόστερ, αγώνες, σκορ, analytics και team room." />
+  <title>BasketLeague Pro 6.0</title>
+  <link rel="stylesheet" href="./styles.css?v=6.0.0" />
 </head>
 <body>
   <header class="topbar">
@@ -16,7 +16,7 @@
   </header>
   <main>
     <section class="hero" id="dashboard">
-      <div class="hero-copy"><p class="kicker">Season Command Center v5</p><h1>HotHeroes vs Ιπτάμενοι</h1><p class="hero-text">Πιο γρήγορο, πιο καθαρό κέντρο ελέγχου για αγώνες, παίκτες, φόρμα ομάδας και αποφάσεις πριν το τζάμπολ.</p><div class="hero-actions"><a class="button primary" href="#matches">Νέος αγώνας</a><a class="button secondary" href="#analytics">Πλάνο αγώνα</a></div></div>
+      <div class="hero-copy"><p class="kicker">Season Command Center v6</p><h1>HotHeroes vs Ιπτάμενοι</h1><p class="hero-text">Πιο γρήγορο, πιο καθαρό κέντρο ελέγχου για αγώνες, παίκτες, φόρμα ομάδας και αποφάσεις πριν το τζάμπολ.</p><div class="hero-actions"><a class="button primary" href="#matches">Νέος αγώνας</a><a class="button secondary" href="#analytics">Πλάνο αγώνα</a></div></div>
       <div class="court-visual" aria-hidden="true"><div class="court-line center"></div><div class="court-line ring"></div><div class="court-line key left"></div><div class="court-line key right"></div><div class="court-ball"></div><div class="court-label hot">HotHeroes</div><div class="court-label fly">Ιπτάμενοι</div></div>
       <div class="metrics-grid" id="insights" aria-live="polite"></div>
     </section>
@@ -30,6 +30,6 @@
     <section class="workspace-grid compact" id="chat"><article class="panel"><div class="panel-heading"><div><p class="section-label">Score desk</p><h2>Καταχώρηση σκορ</h2></div></div><form id="score-form" class="stacked-form"><label for="match-id">Αγώνας</label><select id="match-id" required></select><div class="score-fields"><label>HotHeroes<input type="number" id="hot" min="0" max="300" required placeholder="0" /></label><label>Ιπτάμενοι<input type="number" id="fly" min="0" max="300" required placeholder="0" /></label></div><button type="submit">Αποθήκευση σκορ</button></form></article><article class="panel"><div class="panel-heading"><div><p class="section-label">Team room</p><h2>Chat ομάδας</h2></div><button id="clear-chat" class="ghost danger" type="button">Καθαρισμός</button></div><form id="chat-form" class="chat-form"><input id="user" required maxlength="80" autocomplete="name" placeholder="Όνομα" /><textarea id="text" required maxlength="500" rows="3" placeholder="Μήνυμα"></textarea><button type="submit">Αποστολή</button></form><div class="chat-tools"><input id="chat-search" type="search" placeholder="Αναζήτηση μηνυμάτων..." /></div><ul id="messages" class="message-list" aria-live="polite"></ul></article></section>
   </main>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="./script.js?v=5.0.0"></script>
+  <script type="module" src="./script.js?v=6.0.0"></script>
 </body>
 </html>
