@@ -194,3 +194,19 @@ input::placeholder,textarea::placeholder { color: #89a0d0; }
   .metrics-grid { grid-template-columns: 1fr 1fr; }
   .inline-fields { grid-template-columns: 1fr; }
 }
+
+.topbar-actions{display:flex;gap:8px}
+.search-wrap{margin-bottom:10px;max-width:320px}
+.chat-tools{margin:10px 0}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+body.light {
+  --bg: #f3f7ff;
+  --bg-elev: #ffffff;
+  --panel: rgba(255,255,255,0.9);
+  --panel-strong: rgba(248,251,255,0.96);
+  --panel-soft: rgba(44, 100, 255, 0.1);
+  --text: #11203f;
+  --muted: #5a6f98;
+  --line: rgba(50, 96, 194, 0.2);
+  background: linear-gradient(160deg,#f4f7ff,#e9efff);
+}

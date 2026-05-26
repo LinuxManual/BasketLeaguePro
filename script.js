@@ -3,6 +3,7 @@ const TEAM_FLY = "Ιπτάμενοι";
 const LEGACY_TEAM_FLY = "Ξ™Ο€Ο„Ξ¬ΞΌΞµΞ½ΞΏΞΉ";
 const TEAMS = [TEAM_HOT, TEAM_FLY];
 const STORAGE_KEY = "basketleaguepro:v4";
+const THEME_KEY = "basketleaguepro:theme";
 const USE_STATIC_STORE = location.hostname.endsWith("github.io");
 
 const els = {
@@ -18,11 +19,17 @@ const els = {
   matchId: document.getElementById("match-id"),
   messages: document.getElementById("messages"),
   toast: document.getElementById("toast"),
-  refresh: document.getElementById("refresh")
+  refresh: document.getElementById("refresh"),
+  themeToggle: document.getElementById("theme-toggle"),
+  exportState: document.getElementById("export-state"),
+  matchSearch: document.getElementById("match-search"),
+  chatSearch: document.getElementById("chat-search")
 };
 
 let state = normalizeState();
 let activeFilter = "all";
+let matchSearchQuery = "";
+let chatSearchQuery = "";
 let toastTimer;
 
 function normalizeState(next = {}) {
@@ -332,6 +339,9 @@ function renderRosters() {
 
 function getFilteredMatches() {
   return state.matches.filter((match) => {
+    const query = matchSearchQuery.toLocaleLowerCase("el-GR");
+    const searchable = `${match.court} ${match.date} ${match.time}`.toLocaleLowerCase("el-GR");
+    if (query && !searchable.includes(query)) return false;
     if (activeFilter === "completed") return isCompleted(match);
     if (activeFilter === "upcoming") return !isCompleted(match);
     return true;
@@ -406,14 +416,20 @@ function renderMessages() {
     return;
   }
 
+  const filtered = state.messages.filter((message) => {
+    const q = chatSearchQuery.toLocaleLowerCase("el-GR");
+    if (!q) return true;
+    return `${message.user} ${message.text}`.toLocaleLowerCase("el-GR").includes(q);
+  });
+
   els.messages.replaceChildren(
-    ...state.messages.map((message) =>
+    ...(filtered.length ? filtered : [{user:"",text:""}]).map((message) =>
       createNode("li", {}, [
         createNode("div", { className: "message-header" }, [
           createNode("b", { text: message.user }),
           createNode("time", { text: formatDateTime(message.createdAt), attrs: { datetime: new Date(message.createdAt).toISOString() } })
         ]),
-        createNode("p", { className: "message-text", text: message.text })
+        createNode("p", { className: "message-text", text: message.text || "Δεν υπάρχουν αποτελέσματα αναζήτησης." })
       ])
     )
   );
@@ -575,3 +591,33 @@ els.refresh.addEventListener("click", () => refresh());
 render();
 refresh(true);
 window.setInterval(() => refresh(true), 5000);
+
+els.matchSearch?.addEventListener("input", (event) => {
+  matchSearchQuery = event.target.value.trim();
+  renderMatches();
+});
+
+els.chatSearch?.addEventListener("input", (event) => {
+  chatSearchQuery = event.target.value.trim();
+  renderMessages();
+});
+
+els.themeToggle?.addEventListener("click", () => {
+  const isLight = document.body.classList.toggle("light");
+  localStorage.setItem(THEME_KEY, isLight ? "light" : "dark");
+  showToast(isLight ? "Light mode" : "Dark mode");
+});
+
+els.exportState?.addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `basketleaguepro-export-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast("Τα δεδομένα εξήχθησαν.");
+});
+
+if (localStorage.getItem(THEME_KEY) === "light") document.body.classList.add("light");
+
