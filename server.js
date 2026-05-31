@@ -30,10 +30,21 @@ function normalizeRoster(value) {
   if (!Array.isArray(value)) return [];
   const seen = new Set();
   return value
-    .map((item) => normalizeText(item, MAX_NAME_LENGTH))
+    .map((item) => {
+      if (!item) return null;
+      if (typeof item === "string") {
+        return { name: normalizeText(item, MAX_NAME_LENGTH), number: "0", position: "SG" };
+      }
+      return {
+        name: normalizeText(item.name, MAX_NAME_LENGTH),
+        number: normalizeText(item.number || "0", 3),
+        position: normalizeText(item.position || "SG", 10)
+      };
+    })
     .filter((item) => {
-      const key = item.toLocaleLowerCase("el-GR");
-      if (!item || seen.has(key)) return false;
+      if (!item || !item.name) return false;
+      const key = item.name.toLocaleLowerCase("el-GR");
+      if (seen.has(key)) return false;
       seen.add(key);
       return true;
     });
@@ -157,19 +168,22 @@ async function handlePlayers(req, res) {
     const body = await readBody(req);
     const team = body.team;
     const name = normalizeText(body.name, MAX_NAME_LENGTH);
-    if (!TEAMS.includes(team) || !name) return sendJson(res, 400, { error: "Invalid player payload" });
+    const number = normalizeText(body.number || "0", 3);
+    const position = normalizeText(body.position || "SG", 10);
+    
+    if (!TEAMS.includes(team) || !name || !position) return sendJson(res, 400, { error: "Invalid player payload" });
 
     const store = loadStore();
     if (req.method === "POST") {
-      const exists = store.rosters[team].some((item) => item.toLocaleLowerCase("el-GR") === name.toLocaleLowerCase("el-GR"));
-      if (!exists) store.rosters[team].push(name);
+      const exists = store.rosters[team].some((item) => item.name.toLocaleLowerCase("el-GR") === name.toLocaleLowerCase("el-GR"));
+      if (!exists) store.rosters[team].push({ name, number, position });
       saveStore(store);
       return sendJson(res, 200, store);
     }
 
     if (req.method === "DELETE") {
       const before = store.rosters[team].length;
-      store.rosters[team] = store.rosters[team].filter((item) => item.toLocaleLowerCase("el-GR") !== name.toLocaleLowerCase("el-GR"));
+      store.rosters[team] = store.rosters[team].filter((item) => item.name.toLocaleLowerCase("el-GR") !== name.toLocaleLowerCase("el-GR"));
       if (store.rosters[team].length === before) return sendJson(res, 404, { error: "Player not found" });
       saveStore(store);
       return sendJson(res, 200, store);
@@ -195,8 +209,18 @@ async function handleMatches(req, res) {
       if (!date || !time || !court || !isValidDate(date) || !isValidTime(time)) {
         return sendJson(res, 400, { error: "Invalid match payload" });
       }
-      store.matches.push({ id: createId(), date, time, court, hotScore: null, flyScore: null });
+      
+      const matchId = createId();
+      store.matches.push({ id: matchId, date, time, court, hotScore: null, flyScore: null });
       store.matches.sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+      
+      // Auto system chat log
+      store.messages.unshift({
+        user: "System",
+        text: `📅 Νέος αγώνας προγραμματίστηκε: ${date} ${time} στο γήπεδο ${court}`,
+        createdAt: Date.now()
+      });
+
       saveStore(store);
       return sendJson(res, 200, store);
     }
@@ -231,6 +255,14 @@ async function handleScores(req, res) {
     if (!match) return sendJson(res, 404, { error: "Match not found" });
     match.hotScore = hotScore;
     match.flyScore = flyScore;
+
+    // Auto system chat log
+    store.messages.unshift({
+      user: "System",
+      text: `🏀 Ο αγώνας στο γήπεδο ${match.court} ολοκληρώθηκε! HotHeroes ${hotScore} - ${flyScore} Ιπτάμενοι`,
+      createdAt: Date.now()
+    });
+
     saveStore(store);
     return sendJson(res, 200, store);
   } catch (error) {
@@ -276,7 +308,7 @@ const server = http.createServer(async (req, res) => {
   if (pathname === "/api/scores" && req.method === "POST") return handleScores(req, res);
   if (pathname === "/api/chat" && ["POST", "DELETE"].includes(req.method)) return handleChat(req, res);
   if (pathname === "/api/health" && req.method === "GET") {
-    return sendJson(res, 200, { ok: true, version: "4.0.1", uptime: process.uptime() });
+    return sendJson(res, 200, { ok: true, version: "5.0.0", uptime: process.uptime() });
   }
 
   if (pathname.startsWith("/api/")) {
