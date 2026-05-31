@@ -2,7 +2,8 @@ const TEAM_HOT = "HotHeroes";
 const TEAM_FLY = "Ιπτάμενοι";
 const LEGACY_TEAM_FLY = "Ξ™Ο€Ο„Ξ¬ΞΌΞµΞ½ΞΏΞΉ";
 const TEAMS = [TEAM_HOT, TEAM_FLY];
-const STORAGE_KEY = "basketleaguepro:v5";
+const STORAGE_KEY = "basketleaguepro:v6";
+const LEGACY_STORAGE_KEYS = ["basketleaguepro:v5"];
 const USE_STATIC_STORE = location.hostname.endsWith("github.io");
 
 const els = {
@@ -19,6 +20,21 @@ const els = {
   messages: document.getElementById("messages"),
   toast: document.getElementById("toast"),
   refresh: document.getElementById("refresh"),
+  seasonHealth: document.getElementById("season-health"),
+  seasonNarrative: document.getElementById("season-narrative"),
+  timelineStrip: document.getElementById("timeline-strip"),
+  nextMatch: document.getElementById("next-match"),
+  hotPowerBar: document.getElementById("hot-power-bar"),
+  flyPowerBar: document.getElementById("fly-power-bar"),
+  hotPowerLabel: document.getElementById("hot-power-label"),
+  flyPowerLabel: document.getElementById("fly-power-label"),
+  rosterSearch: document.getElementById("roster-search"),
+  rosterSort: document.getElementById("roster-sort"),
+  matchSearch: document.getElementById("match-search"),
+  matchSort: document.getElementById("match-sort"),
+  exportData: document.getElementById("export-data"),
+  copySummary: document.getElementById("copy-summary"),
+  resetLocal: document.getElementById("reset-local"),
 
   // Simulator Elements
   simModal: document.getElementById("simulator-modal"),
@@ -36,6 +52,10 @@ const els = {
 let state = normalizeState();
 let activeFilter = "all";
 let toastTimer;
+let rosterQuery = "";
+let rosterSortMode = "name";
+let matchQuery = "";
+let matchSortMode = "date-asc";
 
 // Simulation State
 let activeSimMatch = null;
@@ -98,11 +118,16 @@ async function api(path, options = {}) {
 }
 
 function readLocalStore() {
-  try {
-    return normalizeState(JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"));
-  } catch {
-    return normalizeState();
+  const keys = [STORAGE_KEY, ...LEGACY_STORAGE_KEYS];
+  for (const key of keys) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) return normalizeState(JSON.parse(raw));
+    } catch {
+      // Try the next key before falling back to an empty store.
+    }
   }
+  return normalizeState();
 }
 
 function writeLocalStore(nextState) {
@@ -317,6 +342,84 @@ function buildStandings(matches) {
   return Object.values(table).sort((a, b) => b.wins - a.wins || b.diff - a.diff || b.pointsFor - a.pointsFor);
 }
 
+
+function getTeamSnapshot(team, standings = buildStandings(state.matches)) {
+  const stats = standings.find((row) => row.team === team) || {
+    team,
+    played: 0,
+    wins: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    diff: 0
+  };
+  const rosterSize = state.rosters[team].length;
+  const winRate = stats.played ? Math.round((stats.wins / stats.played) * 100) : 0;
+  const offensiveAverage = stats.played ? Math.round(stats.pointsFor / stats.played) : 0;
+  const power = Math.min(100, Math.round(winRate * 0.55 + Math.max(stats.diff, 0) * 0.7 + rosterSize * 4 + offensiveAverage * 0.18));
+  return { ...stats, rosterSize, winRate, offensiveAverage, power };
+}
+
+function getNextMatch() {
+  const now = new Date();
+  return state.matches
+    .filter((match) => !isCompleted(match))
+    .slice()
+    .sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`))
+    .find((match) => new Date(`${match.date}T${match.time}`) >= now) || state.matches.find((match) => !isCompleted(match));
+}
+
+function makeSeasonSummary() {
+  const completed = state.matches.filter(isCompleted);
+  const standings = buildStandings(state.matches);
+  const leader = standings[0];
+  const totalPlayers = TEAMS.reduce((sum, team) => sum + state.rosters[team].length, 0);
+  const nextMatch = getNextMatch();
+  if (!state.matches.length) return "Το πρωτάθλημα είναι έτοιμο για εκκίνηση: πρόσθεσε παίκτες, δημιούργησε αγώνα και άνοιξε το live simulator.";
+  const leaderText = leader?.wins ? `${leader.team} οδηγεί με ${leader.wins} νίκες και διαφορά ${leader.diff >= 0 ? "+" : ""}${leader.diff}` : "η κορυφή παραμένει ανοιχτή";
+  const nextText = nextMatch ? `Επόμενο tip-off: ${formatDate(nextMatch.date)} στις ${nextMatch.time}, ${nextMatch.court}.` : "Δεν υπάρχει άλλο ανοιχτό fixture.";
+  return `${completed.length}/${state.matches.length} αγώνες έχουν ολοκληρωθεί, ${leaderText}, με ${totalPlayers} ενεργούς παίκτες. ${nextText}`;
+}
+
+function renderCommandCenter() {
+  if (!els.seasonNarrative) return;
+  const standings = buildStandings(state.matches);
+  const hot = getTeamSnapshot(TEAM_HOT, standings);
+  const fly = getTeamSnapshot(TEAM_FLY, standings);
+  const completed = state.matches.filter(isCompleted).length;
+  const nextMatch = getNextMatch();
+
+  els.seasonHealth.textContent = completed ? `${completed} final${completed === 1 ? "" : "s"}` : "Pre-season";
+  els.seasonNarrative.textContent = makeSeasonSummary();
+  els.nextMatch.replaceChildren(
+    nextMatch
+      ? createNode("div", { className: "next-match-content" }, [
+          createNode("b", { text: `${formatDate(nextMatch.date)} • ${nextMatch.time}` }),
+          createNode("span", { text: nextMatch.court }),
+          createNode("small", { text: "HotHeroes vs Ιπτάμενοι" })
+        ])
+      : createNode("span", { text: "Δεν υπάρχει προγραμματισμένος αγώνας." })
+  );
+
+  const maxPower = Math.max(hot.power, fly.power, 1);
+  const hotPercent = Math.max(8, Math.round((hot.power / maxPower) * 100));
+  const flyPercent = Math.max(8, Math.round((fly.power / maxPower) * 100));
+  els.hotPowerBar.style.width = `${hotPercent}%`;
+  els.flyPowerBar.style.width = `${flyPercent}%`;
+  els.hotPowerLabel.textContent = `${hot.power}%`;
+  els.flyPowerLabel.textContent = `${fly.power}%`;
+
+  const timelineItems = state.matches.slice(0, 8).map((match) => {
+    const completedMatch = isCompleted(match);
+    const label = completedMatch ? `${match.hotScore}-${match.flyScore}` : match.time;
+    return createNode("span", {
+      className: `timeline-dot ${completedMatch ? "completed" : "upcoming"}`,
+      text: label,
+      attrs: { title: `${formatDate(match.date)} • ${match.court}` }
+    });
+  });
+  els.timelineStrip.replaceChildren(...(timelineItems.length ? timelineItems : [createNode("span", { className: "empty-state", text: "Χωρίς αγώνες ακόμα." })]));
+}
+
 function renderMetrics() {
   const completed = state.matches.filter(isCompleted);
   const upcoming = state.matches.length - completed.length;
@@ -360,10 +463,26 @@ function renderStandings() {
   );
 }
 
+function getVisibleRoster(team) {
+  const query = rosterQuery.toLocaleLowerCase("el-GR");
+  return state.rosters[team]
+    .filter((player) => {
+      const haystack = `${player.name} ${player.number} ${player.position}`.toLocaleLowerCase("el-GR");
+      return !query || haystack.includes(query);
+    })
+    .slice()
+    .sort((a, b) => {
+      if (rosterSortMode === "number") return Number(a.number) - Number(b.number) || a.name.localeCompare(b.name, "el-GR");
+      if (rosterSortMode === "position") return a.position.localeCompare(b.position, "el-GR") || a.name.localeCompare(b.name, "el-GR");
+      return a.name.localeCompare(b.name, "el-GR");
+    });
+}
+
 function renderRosterList(list, team) {
-  const players = state.rosters[team];
+  const players = getVisibleRoster(team);
   if (!players.length) {
-    list.replaceChildren(createNode("li", { className: "empty-state", text: "Δεν έχουν προστεθεί παίκτες." }));
+    const message = state.rosters[team].length ? "Δεν βρέθηκαν παίκτες για το φίλτρο." : "Δεν έχουν προστεθεί παίκτες.";
+    list.replaceChildren(createNode("li", { className: "empty-state", text: message }));
     return;
   }
 
@@ -405,11 +524,24 @@ function renderRosters() {
 }
 
 function getFilteredMatches() {
-  return state.matches.filter((match) => {
-    if (activeFilter === "completed") return isCompleted(match);
-    if (activeFilter === "upcoming") return !isCompleted(match);
-    return true;
-  });
+  const query = matchQuery.toLocaleLowerCase("el-GR");
+  return state.matches
+    .filter((match) => {
+      if (activeFilter === "completed") return isCompleted(match);
+      if (activeFilter === "upcoming") return !isCompleted(match);
+      return true;
+    })
+    .filter((match) => {
+      const score = isCompleted(match) ? `${match.hotScore}-${match.flyScore}` : "επόμενος";
+      const haystack = `${formatDate(match.date)} ${match.date} ${match.time} ${match.court} ${score}`.toLocaleLowerCase("el-GR");
+      return !query || haystack.includes(query);
+    })
+    .slice()
+    .sort((a, b) => {
+      if (matchSortMode === "date-desc") return new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`);
+      if (matchSortMode === "score-desc") return ((b.hotScore || 0) + (b.flyScore || 0)) - ((a.hotScore || 0) + (a.flyScore || 0));
+      return new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`);
+    });
 }
 
 function renderMatchOptions() {
@@ -515,6 +647,7 @@ function renderMessages() {
 
 function render() {
   renderMetrics();
+  renderCommandCenter();
   renderStandings();
   renderRosters();
   renderMatches();
@@ -734,6 +867,43 @@ async function saveSimScore() {
   }
 }
 
+
+function downloadJson() {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    version: "6.0.0",
+    ...normalizeState(state)
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `basketleaguepro-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  showToast("Το αρχείο JSON ετοιμάστηκε.");
+}
+
+async function copySeasonSummary() {
+  const text = makeSeasonSummary();
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast("Το recap αντιγράφηκε.");
+  } catch {
+    showToast(text);
+  }
+}
+
+function resetLocalData() {
+  localStorage.removeItem(STORAGE_KEY);
+  LEGACY_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+  state = normalizeState();
+  render();
+  showToast("Τα τοπικά δεδομένα μηδενίστηκαν.");
+}
+
 // Event Listeners for Forms
 document.getElementById("player-form").addEventListener("submit", (event) => {
   event.preventDefault();
@@ -815,6 +985,30 @@ document.getElementById("chat-form").addEventListener("submit", (event) => {
 
 // Emojis Quick Click Injections
 setupEmojis();
+
+els.rosterSearch?.addEventListener("input", (event) => {
+  rosterQuery = event.target.value.trim();
+  renderRosters();
+});
+
+els.rosterSort?.addEventListener("change", (event) => {
+  rosterSortMode = event.target.value;
+  renderRosters();
+});
+
+els.matchSearch?.addEventListener("input", (event) => {
+  matchQuery = event.target.value.trim();
+  renderMatches();
+});
+
+els.matchSort?.addEventListener("change", (event) => {
+  matchSortMode = event.target.value;
+  renderMatches();
+});
+
+els.exportData?.addEventListener("click", downloadJson);
+els.copySummary?.addEventListener("click", copySeasonSummary);
+els.resetLocal?.addEventListener("click", resetLocalData);
 
 document.getElementById("clear-chat").addEventListener("click", async () => {
   try {
