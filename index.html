@@ -10,9 +10,24 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./styles.css?v=5.0.0" />
+    <link rel="stylesheet" href="./styles.css?v=5.0.1" />
   </head>
-  <body>
+  <body class="site-locked">
+    <section id="entry-gate" class="entry-gate" aria-labelledby="entry-gate-title">
+      <div class="entry-card">
+        <p class="entry-badge">🔒 BasketLeague Pro</p>
+        <h1 id="entry-gate-title">Καλώς ήρθες!</h1>
+        <p>Πληκτρολόγησε τον κωδικό πρόσβασης για να ανοίξεις το dashboard.</p>
+        <form id="site-lock-form" class="entry-form">
+          <label for="site-lock-code">Κωδικός εισόδου</label>
+          <input id="site-lock-code" type="password" inputmode="numeric" autocomplete="current-password" maxlength="4" required placeholder="••••" />
+          <button class="button primary glow" type="submit">Είσοδος</button>
+        </form>
+        <p id="site-lock-error" class="entry-error" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <div id="app-main">
     <div class="stars-bg"></div>
     <div class="glowing-orb orb-1"></div>
     <div class="glowing-orb orb-2"></div>
@@ -363,6 +378,37 @@
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <script type="module" src="./script.js?v=5.0.0"></script>
+    </div>
+    <script>
+      window.SITE_ENTRY_CODE = window.SITE_ENTRY_CODE || "4091";
+      (() => {
+        const unlockedKey = "basketleaguepro-site-unlocked";
+        const entryCode = String(window.SITE_ENTRY_CODE);
+        const unlock = () => {
+          localStorage.setItem(unlockedKey, "1");
+          document.body.classList.remove("site-locked");
+        };
+        if (localStorage.getItem(unlockedKey) === "1") {
+          unlock();
+          return;
+        }
+        const form = document.getElementById("site-lock-form");
+        const input = document.getElementById("site-lock-code");
+        const error = document.getElementById("site-lock-error");
+        form.addEventListener("submit", (event) => {
+          event.preventDefault();
+          if (input.value.trim() === entryCode) {
+            error.textContent = "";
+            unlock();
+            return;
+          }
+          error.textContent = "Λάθος κωδικός. Δοκίμασε ξανά.";
+          input.value = "";
+          input.focus();
+        });
+        input.focus();
+      })();
+    </script>
+    <script type="module" src="./script.js?v=5.0.2"></script>
   </body>
 </html>

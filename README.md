@@ -7,7 +7,8 @@ BasketLeaguePro is a premium, local-first basketball league dashboard for managi
 - **Premium Glassmorphic Theme**: Rebuilt the interface with custom HSL tailored colors, dark mode, blurred backgrounds, dynamic glowing effects, and smooth micro-animations.
 - **Live Match Simulator**: Added an interactive modal simulator allowing users to simulate matches period-by-period with live ticker feed commentary, automatic play-by-play events, and instant score updates.
 - **Roster Attributes**: Extended the player roster system with Jersey Numbers and Positions (PG, SG, SF, PF, C).
-- **Static fallback for GitHub Pages**: Supports running completely serverless/client-side on GitHub Pages using `localStorage` for state management, while retaining the full local API features when running locally.
+- **Online sync on GitHub Pages**: Uses Cloud Firestore for shared, real-time state across visitors; `localStorage` remains an offline fallback.
+- **Entry gate**: The dashboard displays the existing access-code prompt before opening.
 
 ## Run
 
@@ -17,7 +18,7 @@ npm run start
 
 Open `http://localhost:4173` in your browser.
 
-When running on GitHub Pages (static host), the dashboard runs entirely client-side. Roster, match, score, and chat data is stored locally in the visitor's browser.
+When running on GitHub Pages (static host), roster, match, score, and chat updates are saved to Cloud Firestore and synchronize across visitors. If the cloud service is unavailable, the dashboard safely falls back to the visitor's local browser storage.
 
 ## API Endpoints
 
