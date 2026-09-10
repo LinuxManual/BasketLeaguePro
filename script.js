@@ -4,6 +4,21 @@ const LEGACY_TEAM_FLY = "Ξ™Ο€Ο„Ξ¬ΞΌΞµΞ½ΞΏΞΉ";
 const TEAMS = [TEAM_HOT, TEAM_FLY];
 const STORAGE_KEY = "basketleaguepro:v5";
 const USE_STATIC_STORE = location.hostname.endsWith("github.io");
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional.
+const firebaseConfig = {
+  apiKey: "AIzaSyBm5k1wF7-RaC8hEtTy2Phznxey0FnAcsU",
+  authDomain: "basket-clash-7901c.firebaseapp.com",
+  projectId: "basket-clash-7901c",
+  storageBucket: "basket-clash-7901c.firebasestorage.app",
+  messagingSenderId: "307971899685",
+  appId: "1:307971899685:web:8143142e3fbe3526ef5acc",
+  measurementId: "G-SDPWG5QT2N"
+};
+const CLOUD_DOC_PATH = ["leagues", "basketleaguepro", "state", "live"];
+
+let cloudReady = false;
+let cloudSyncBusy = false;
+let cloudDocRef = null;
 
 const els = {
   insights: document.getElementById("insights"),
@@ -109,6 +124,46 @@ function writeLocalStore(nextState) {
   const normalized = normalizeState(nextState);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
   return normalized;
+}
+
+function enableCloudSync() {
+  Promise.all([
+    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
+    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js")
+  ])
+    .then(async ([{ initializeApp }, { getFirestore, doc, getDoc, setDoc, serverTimestamp, onSnapshot }]) => {
+      const app = initializeApp(firebaseConfig);
+      const database = getFirestore(app);
+      cloudDocRef = doc(database, ...CLOUD_DOC_PATH);
+      const snapshot = await getDoc(cloudDocRef);
+      if (snapshot.exists()) {
+        state = normalizeState(snapshot.data().payload || {});
+        writeLocalStore(state);
+        render();
+      }
+      onSnapshot(cloudDocRef, (nextSnapshot) => {
+        if (!nextSnapshot.exists() || cloudSyncBusy) return;
+        const remoteState = normalizeState(nextSnapshot.data().payload || {});
+        if (JSON.stringify(remoteState) === JSON.stringify(state)) return;
+        state = remoteState;
+        writeLocalStore(state);
+        render();
+      });
+      const localWrite = writeLocalStore;
+      writeLocalStore = (nextState) => {
+        const normalized = localWrite(nextState);
+        if (cloudReady && !cloudSyncBusy) {
+          cloudSyncBusy = true;
+          setDoc(cloudDocRef, { payload: normalized, updatedAt: serverTimestamp() }, { merge: true })
+            .catch(() => showToast("Δεν ήταν δυνατή η online αποθήκευση."))
+            .finally(() => { cloudSyncBusy = false; });
+        }
+        return normalized;
+      };
+      cloudReady = true;
+      showToast("Ο online συγχρονισμός είναι ενεργός.");
+    })
+    .catch(() => showToast("Η σύνδεση online συγχρονισμού δεν είναι διαθέσιμη."));
 }
 
 function parseBody(options) {
@@ -892,4 +947,5 @@ els.refresh.addEventListener("click", () => refresh());
 // Initialization
 render();
 refresh(true);
+enableCloudSync();
 window.setInterval(() => refresh(true), 5000);

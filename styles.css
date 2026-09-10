@@ -1254,6 +1254,40 @@ input::placeholder, textarea::placeholder {
   align-items: center;
 }
 
+/* Entry gate: keep the existing shared code prompt visible before the dashboard. */
+.entry-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: radial-gradient(circle at 20% 10%, rgba(0, 242, 254, 0.18), transparent 42%), radial-gradient(circle at 80% 0%, rgba(255, 76, 116, 0.2), transparent 44%), #050b1a;
+}
+
+.entry-card {
+  width: min(430px, 100%);
+  padding: 30px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: rgba(10, 15, 29, 0.94);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  text-align: center;
+}
+
+.entry-card h1 { margin: 0 0 10px; }
+.entry-card > p:not(.entry-badge):not(.entry-error) { color: var(--muted); line-height: 1.6; }
+.entry-badge { margin: 0 0 14px; color: var(--fly); font-weight: 800; }
+.entry-form { display: grid; gap: 10px; margin-top: 22px; text-align: left; }
+.entry-form label { font-size: 0.86rem; font-weight: 700; }
+.entry-form input { text-align: center; letter-spacing: 0.38em; font-size: 1.1rem; }
+.entry-form button { justify-content: center; }
+.entry-error { min-height: 1.3em; margin: 12px 0 0; color: #ff9caf; font-weight: 700; }
+.site-locked #app-main { filter: blur(8px); pointer-events: none; user-select: none; }
+.site-locked { overflow: hidden; }
+.site-locked .entry-gate { display: grid; }
+body:not(.site-locked) .entry-gate { display: none; }
+
 /* Responsive Breakpoints */
 @media (max-width: 1100px) {
   .hero {
@@ -1292,4 +1326,7 @@ input::placeholder, textarea::placeholder {
   .metrics-grid {
     grid-template-columns: 1fr 1fr;
   }
+
+  .entry-gate { padding: 14px; }
+  .entry-card { padding: 24px 18px; }
 }
