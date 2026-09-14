@@ -379,36 +379,7 @@
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </div>
-    <script>
-      window.SITE_ENTRY_CODE = window.SITE_ENTRY_CODE || "4091";
-      (() => {
-        const unlockedKey = "basketleaguepro-site-unlocked";
-        const entryCode = String(window.SITE_ENTRY_CODE);
-        const unlock = () => {
-          localStorage.setItem(unlockedKey, "1");
-          document.body.classList.remove("site-locked");
-        };
-        if (localStorage.getItem(unlockedKey) === "1") {
-          unlock();
-          return;
-        }
-        const form = document.getElementById("site-lock-form");
-        const input = document.getElementById("site-lock-code");
-        const error = document.getElementById("site-lock-error");
-        form.addEventListener("submit", (event) => {
-          event.preventDefault();
-          if (input.value.trim() === entryCode) {
-            error.textContent = "";
-            unlock();
-            return;
-          }
-          error.textContent = "Λάθος κωδικός. Δοκίμασε ξανά.";
-          input.value = "";
-          input.focus();
-        });
-        input.focus();
-      })();
-    </script>
-    <script type="module" src="./script.js?v=5.0.2"></script>
+    <script src="./firebase-config.js?v=5.0.4"></script>
+    <script type="module" src="./script.js?v=5.0.4"></script>
   </body>
 </html>

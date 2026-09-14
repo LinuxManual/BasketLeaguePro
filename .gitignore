@@ -1,0 +1,5 @@
+# Local runtime configuration. Keep Firebase configuration in deployment secrets,
+# not in tracked browser source files.
+.env
+.env.*
+!.env.example
