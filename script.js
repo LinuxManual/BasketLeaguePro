@@ -4,16 +4,6 @@ const LEGACY_TEAM_FLY = "Ξ™Ο€Ο„Ξ¬ΞΌΞµΞ½ΞΏΞΉ";
 const TEAMS = [TEAM_HOT, TEAM_FLY];
 const STORAGE_KEY = "basketleaguepro:v5";
 const USE_STATIC_STORE = location.hostname.endsWith("github.io");
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional.
-const firebaseConfig = {
-  apiKey: "AIzaSyBm5k1wF7-RaC8hEtTy2Phznxey0FnAcsU",
-  authDomain: "basket-clash-7901c.firebaseapp.com",
-  projectId: "basket-clash-7901c",
-  storageBucket: "basket-clash-7901c.firebasestorage.app",
-  messagingSenderId: "307971899685",
-  appId: "1:307971899685:web:8143142e3fbe3526ef5acc",
-  measurementId: "G-SDPWG5QT2N"
-};
 const CLOUD_DOC_PATH = ["leagues", "basketleaguepro", "state", "live"];
 
 let cloudReady = false;
@@ -126,10 +116,23 @@ function writeLocalStore(nextState) {
   return normalized;
 }
 
-function enableCloudSync() {
+async function fetchFirebaseConfig() {
+  if (globalThis.__FIREBASE_CONFIG__) return globalThis.__FIREBASE_CONFIG__;
+  if (USE_STATIC_STORE) return null;
+
+  const response = await fetch("/api/firebase-config", { cache: "no-store" });
+  if (!response.ok) return null;
+  const payload = await response.json();
+  return payload.config || null;
+}
+
+async function enableCloudSync() {
+  const firebaseConfig = await fetchFirebaseConfig().catch(() => null);
+  if (!firebaseConfig) return;
+
   Promise.all([
-    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
-    import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js")
+    import("https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js"),
+    import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js")
   ])
     .then(async ([{ initializeApp }, { getFirestore, doc, getDoc, setDoc, serverTimestamp, onSnapshot }]) => {
       const app = initializeApp(firebaseConfig);
