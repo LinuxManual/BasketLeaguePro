@@ -5,10 +5,14 @@ const TEAMS = [TEAM_HOT, TEAM_FLY];
 const STORAGE_KEY = "basketleaguepro:v5";
 const USE_STATIC_STORE = location.hostname.endsWith("github.io");
 const CLOUD_DOC_PATH = ["leagues", "basketleaguepro", "state", "live"];
+const ACCESS_DOC_PATH = ["leagues", "basketleaguepro", "settings", "access"];
+const DEFAULT_ENTRY_CODE = "4091";
+const ENTRY_UNLOCK_KEY = "basketleaguepro-site-unlocked";
 
 let cloudReady = false;
 let cloudSyncBusy = false;
 let cloudDocRef = null;
+let entryCode = DEFAULT_ENTRY_CODE;
 
 const els = {
   insights: document.getElementById("insights"),
@@ -95,6 +99,9 @@ async function api(path, options = {}) {
       if (response.status === 404) return localApi(path, options);
       throw new Error(payload.error || "Request failed");
     }
+    if (options.method && options.method !== "GET" && payload.rosters && payload.matches && payload.messages) {
+      writeLocalStore(payload);
+    }
     return payload;
   } catch (error) {
     if (error instanceof TypeError) return localApi(path, options);
@@ -136,13 +143,38 @@ async function enableCloudSync() {
   ])
     .then(async ([{ initializeApp }, { getFirestore, doc, getDoc, setDoc, serverTimestamp, onSnapshot }]) => {
       const app = initializeApp(firebaseConfig);
+      import("https://www.gstatic.com/firebasejs/12.19.0/firebase-analytics.js")
+        .then(({ getAnalytics }) => getAnalytics(app))
+        .catch(() => {});
       const database = getFirestore(app);
       cloudDocRef = doc(database, ...CLOUD_DOC_PATH);
+      const accessDocRef = doc(database, ...ACCESS_DOC_PATH);
+
+      const applyAccessCode = (snapshot) => {
+        const remoteCode = String(snapshot.data()?.accessCode || "").trim();
+        if (remoteCode) entryCode = remoteCode;
+      };
+      try {
+        const accessSnapshot = await getDoc(accessDocRef);
+        if (accessSnapshot.exists()) {
+          applyAccessCode(accessSnapshot);
+        } else {
+          await setDoc(accessDocRef, { accessCode: DEFAULT_ENTRY_CODE, updatedAt: serverTimestamp() });
+        }
+        onSnapshot(accessDocRef, (nextSnapshot) => {
+          if (nextSnapshot.exists()) applyAccessCode(nextSnapshot);
+        });
+      } catch {
+        showToast("Δεν ήταν δυνατή η φόρτωση του κωδικού εισόδου από το Firebase.");
+      }
+
       const snapshot = await getDoc(cloudDocRef);
       if (snapshot.exists()) {
         state = normalizeState(snapshot.data().payload || {});
         writeLocalStore(state);
         render();
+      } else {
+        await setDoc(cloudDocRef, { payload: state, updatedAt: serverTimestamp() });
       }
       onSnapshot(cloudDocRef, (nextSnapshot) => {
         if (!nextSnapshot.exists() || cloudSyncBusy) return;
@@ -167,6 +199,30 @@ async function enableCloudSync() {
       showToast("Ο online συγχρονισμός είναι ενεργός.");
     })
     .catch(() => showToast("Η σύνδεση online συγχρονισμού δεν είναι διαθέσιμη."));
+}
+
+function setupEntryGate() {
+  const form = document.getElementById("site-lock-form");
+  const input = document.getElementById("site-lock-code");
+  const error = document.getElementById("site-lock-error");
+  const unlock = () => {
+    sessionStorage.setItem(ENTRY_UNLOCK_KEY, "1");
+    document.body.classList.remove("site-locked");
+  };
+
+  if (sessionStorage.getItem(ENTRY_UNLOCK_KEY) === "1") unlock();
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (input.value.trim() === entryCode) {
+      error.textContent = "";
+      unlock();
+      return;
+    }
+    error.textContent = "Λάθος κωδικός. Δοκίμασε ξανά.";
+    input.value = "";
+    input.focus();
+  });
+  input.focus();
 }
 
 function parseBody(options) {
@@ -580,6 +636,11 @@ function render() {
 }
 
 async function refresh(silent = false) {
+  if (cloudReady) {
+    render();
+    if (!silent) showToast("Το dashboard ενημερώνεται από το Firebase.");
+    return;
+  }
   try {
     state = normalizeState(await api("state"));
     render();
@@ -948,6 +1009,7 @@ els.closeSimBtn.addEventListener("click", () => {
 els.refresh.addEventListener("click", () => refresh());
 
 // Initialization
+setupEntryGate();
 render();
 refresh(true);
 enableCloudSync();

@@ -25,6 +25,8 @@ For GitHub Pages, the included deployment workflow creates `firebase-config.js` 
 
 On a Node deployment, the server exposes the web configuration only to the running dashboard at `GET /api/firebase-config`; this endpoint is intentionally not available unless every required variable is configured. Firebase web configuration is public client configuration, not a substitute for security: restrict the API key to the approved web origins in Google Cloud and protect shared Firestore data with Firebase Authentication and Firestore Security Rules. Do not try to bypass GitHub secret scanning; rotate any credential that has been committed or flagged.
 
+The Firebase connection covers the roster, fixtures, score results, standings input, team chat, and entry gate. League state is stored in `leagues/basketleaguepro/state/live`; the entry code is stored in `leagues/basketleaguepro/settings/access`. On the first successful Firebase connection the app creates the access document with `accessCode: "4091"`; change that field in the Firestore console to use your own code. The code is checked again for each browser session. This is an access gate, not authentication: use Firebase Authentication and restrictive Firestore rules for real protection.
+
 ## Run
 
 ```bash
