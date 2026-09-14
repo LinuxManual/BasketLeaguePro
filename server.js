@@ -13,6 +13,15 @@ const TEAM_HOT = "HotHeroes";
 const TEAM_FLY = "Ιπτάμενοι";
 const LEGACY_TEAM_FLY = "Ξ™Ο€Ο„Ξ¬ΞΌΞµΞ½ΞΏΞΉ";
 const TEAMS = [TEAM_HOT, TEAM_FLY];
+const FIREBASE_ENV_FIELDS = {
+  apiKey: "FIREBASE_API_KEY",
+  authDomain: "FIREBASE_AUTH_DOMAIN",
+  projectId: "FIREBASE_PROJECT_ID",
+  storageBucket: "FIREBASE_STORAGE_BUCKET",
+  messagingSenderId: "FIREBASE_MESSAGING_SENDER_ID",
+  appId: "FIREBASE_APP_ID",
+  measurementId: "FIREBASE_MEASUREMENT_ID"
+};
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -76,6 +85,16 @@ function sendJson(res, statusCode, payload) {
     "Cache-Control": "no-store"
   });
   res.end(JSON.stringify(payload));
+}
+
+function getFirebaseConfig() {
+  const config = Object.fromEntries(
+    Object.entries(FIREBASE_ENV_FIELDS)
+      .map(([key, envName]) => [key, process.env[envName]])
+      .filter(([, value]) => Boolean(value))
+  );
+  const required = ["apiKey", "authDomain", "projectId", "storageBucket", "messagingSenderId", "appId"];
+  return required.every((key) => config[key]) ? config : null;
 }
 
 function addCorsHeaders(res) {
@@ -303,6 +322,12 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (pathname === "/api/state" && req.method === "GET") return sendJson(res, 200, loadStore());
+  if (pathname === "/api/firebase-config" && req.method === "GET") {
+    const config = getFirebaseConfig();
+    return config
+      ? sendJson(res, 200, { config })
+      : sendJson(res, 503, { error: "Firebase is not configured" });
+  }
   if (pathname === "/api/players") return handlePlayers(req, res);
   if (pathname === "/api/matches") return handleMatches(req, res);
   if (pathname === "/api/scores" && req.method === "POST") return handleScores(req, res);

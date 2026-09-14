@@ -10,6 +10,21 @@ BasketLeaguePro is a premium, local-first basketball league dashboard for managi
 - **Online sync on GitHub Pages**: Uses Cloud Firestore for shared, real-time state across visitors; `localStorage` remains an offline fallback.
 - **Entry gate**: The dashboard displays the existing access-code prompt before opening.
 
+## Firebase configuration
+
+Firebase's web configuration is loaded from runtime configuration instead of being embedded in tracked browser JavaScript. Create a local `.env` from `.env.example`, set the variables with the Firebase project values, and export them before starting the server. In production, set the same variables through the host's secret/environment-variable settings.
+
+```bash
+set -a
+. ./.env
+set +a
+npm run start
+```
+
+For GitHub Pages, the included deployment workflow creates `firebase-config.js` from GitHub Actions secrets and deploys it as a Pages artifact. The generated file is never committed to the repository or a `gh-pages` branch, so Firebase synchronization works on the static site without placing the values in Git history. Add the seven names from `.env.example` as repository Actions secrets, then set **Settings → Pages → Source** to **GitHub Actions** and push to `main` (or run **Deploy GitHub Pages** manually).
+
+On a Node deployment, the server exposes the web configuration only to the running dashboard at `GET /api/firebase-config`; this endpoint is intentionally not available unless every required variable is configured. Firebase web configuration is public client configuration, not a substitute for security: restrict the API key to the approved web origins in Google Cloud and protect shared Firestore data with Firebase Authentication and Firestore Security Rules. Do not try to bypass GitHub secret scanning; rotate any credential that has been committed or flagged.
+
 ## Run
 
 ```bash
@@ -18,7 +33,7 @@ npm run start
 
 Open `http://localhost:4173` in your browser.
 
-When running on GitHub Pages (static host), roster, match, score, and chat updates are saved to Cloud Firestore and synchronize across visitors. If the cloud service is unavailable, the dashboard safely falls back to the visitor's local browser storage.
+When Firebase is configured on the Node host, roster, match, score, and chat updates are saved to Cloud Firestore and synchronize across visitors. If cloud sync is unavailable, the dashboard safely falls back to the visitor's local browser storage.
 
 ## API Endpoints
 
@@ -31,6 +46,7 @@ When running on GitHub Pages (static host), roster, match, score, and chat updat
 - `POST /api/chat` - Post a message to team locker room chat
 - `DELETE /api/chat` - Clear all chat messages
 - `GET /api/health` - Diagnostics and app version health checks
+- `GET /api/firebase-config` - Provides Firebase web configuration only when the server environment is fully configured
 
 ## Deployment Note
 
