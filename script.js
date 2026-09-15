@@ -24,13 +24,6 @@ const els = {
   messages: document.getElementById("messages"),
   toast: document.getElementById("toast"),
   refresh: document.getElementById("refresh"),
-  interactiveCourt: document.getElementById("interactive-court"),
-  courtBall: document.getElementById("court-ball"),
-  courtTrail: document.getElementById("court-trail"),
-  courtFeedback: document.getElementById("court-feedback"),
-  courtHotScore: document.getElementById("court-hot-score"),
-  courtFlyScore: document.getElementById("court-fly-score"),
-  courtClock: document.getElementById("court-clock"),
 
   // Simulator Elements
   simModal: document.getElementById("simulator-modal"),
@@ -56,11 +49,6 @@ let simTimeTotalSeconds = 0; // 0 to 48 minutes (2880 seconds)
 let simScoreHot = 0;
 let simScoreFly = 0;
 let simSpeed = 1; // 1x or 5x
-let courtScores = { hot: 0, fly: 0 };
-let courtShotClock = 24;
-let courtDragActive = false;
-let courtResetTimer;
-let courtDragged = false;
 
 // SVG Icons
 const SVG_TRASH = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
@@ -336,100 +324,6 @@ function setupEmojis() {
       textarea.focus();
     });
   }
-}
-
-function updateCourtScoreboard() {
-  els.courtHotScore.textContent = String(courtScores.hot).padStart(2, "0");
-  els.courtFlyScore.textContent = String(courtScores.fly).padStart(2, "0");
-  els.courtClock.textContent = `00:${String(courtShotClock).padStart(2, "0")}`;
-}
-
-function resetCourtBall() {
-  els.courtBall.classList.remove("is-shooting", "is-dragging");
-  els.courtBall.style.removeProperty("left");
-  els.courtBall.style.removeProperty("top");
-  els.courtTrail.classList.remove("is-visible");
-  courtShotClock = 24;
-  updateCourtScoreboard();
-}
-
-function getCourtTargetAtPoint(clientX, clientY) {
-  const targets = els.interactiveCourt.querySelectorAll(".court-target[data-team]");
-  for (const target of targets) {
-    const rect = target.getBoundingClientRect();
-    if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
-      return target.dataset.team;
-    }
-  }
-  return null;
-}
-
-function shootCourtBall(team) {
-  if (els.courtBall.classList.contains("is-shooting")) return;
-  const isHot = team === "hot";
-  courtScores[team] += 2;
-  courtShotClock = Math.max(1, courtShotClock - 5);
-  updateCourtScoreboard();
-  els.courtBall.classList.remove("is-dragging");
-  els.courtBall.classList.add("is-shooting", isHot ? "to-hot" : "to-fly");
-  els.courtTrail.className = `court-trail is-visible ${isHot ? "to-hot" : "to-fly"}`;
-  els.courtFeedback.textContent = `SWISH! +2 ${isHot ? "HotHeroes" : "Ιπτάμενοι"}`;
-  window.clearTimeout(courtResetTimer);
-  courtResetTimer = window.setTimeout(() => {
-    els.courtBall.classList.remove("to-hot", "to-fly");
-    els.courtFeedback.textContent = "Ωραία εκτέλεση — ξαναπάσαρε!";
-    resetCourtBall();
-  }, 1100);
-}
-
-function setupInteractiveCourt() {
-  if (!els.interactiveCourt || !els.courtBall) return;
-  const placeBall = (event) => {
-    const rect = els.interactiveCourt.getBoundingClientRect();
-    const x = Math.max(34, Math.min(rect.width - 34, event.clientX - rect.left));
-    const y = Math.max(88, Math.min(rect.height - 42, event.clientY - rect.top));
-    els.courtBall.style.left = `${(x / rect.width) * 100}%`;
-    els.courtBall.style.top = `${(y / rect.height) * 100}%`;
-  };
-  els.courtBall.addEventListener("pointerdown", (event) => {
-    if (els.courtBall.classList.contains("is-shooting")) return;
-    courtDragActive = true;
-    courtDragged = false;
-    els.courtBall.setPointerCapture(event.pointerId);
-    els.courtBall.classList.add("is-dragging");
-    els.courtFeedback.textContent = "Στόχευσε ένα καλάθι…";
-    placeBall(event);
-  });
-  els.courtBall.addEventListener("pointermove", (event) => {
-    if (!courtDragActive) return;
-    courtDragged = true;
-    placeBall(event);
-  });
-  els.courtBall.addEventListener("pointerup", (event) => {
-    if (!courtDragActive) return;
-    courtDragActive = false;
-    const team = getCourtTargetAtPoint(event.clientX, event.clientY);
-    if (team) {
-      shootCourtBall(team);
-      return;
-    }
-    els.courtBall.classList.remove("is-dragging");
-    els.courtFeedback.textContent = "Δεν βρήκε στόχο — σύρε την μπάλα πάνω σε ένα +2.";
-  });
-  els.courtBall.addEventListener("pointercancel", () => {
-    courtDragActive = false;
-    els.courtBall.classList.remove("is-dragging");
-    els.courtFeedback.textContent = "Η πάσα ακυρώθηκε — δοκίμασε ξανά.";
-  });
-  els.courtBall.addEventListener("click", () => {
-    if (!courtDragged && !courtDragActive && !els.courtBall.classList.contains("is-shooting")) {
-      els.courtFeedback.textContent = "Διάλεξε ένα +2 για να σουτάρεις.";
-    }
-  });
-  els.interactiveCourt.addEventListener("click", (event) => {
-    const target = event.target.closest(".court-target[data-team]");
-    if (target && !els.courtBall.classList.contains("is-shooting")) shootCourtBall(target.dataset.team);
-  });
 }
 
 function showToast(message) {
@@ -979,8 +873,6 @@ document.getElementById("chat-form").addEventListener("submit", (event) => {
 
 // Emojis Quick Click Injections
 setupEmojis();
-setupInteractiveCourt();
-updateCourtScoreboard();
 
 document.getElementById("clear-chat").addEventListener("click", async () => {
   try {
