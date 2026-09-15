@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0a0f1d" />
     <meta name="description" content="BasketLeague Pro premium dashboard for basketball rosters, matches, scores, and team chat." />
+    <link rel="manifest" href="./manifest.json" />
     <title>BasketLeague Pro 5.0.0</title>
     <!-- Premium Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -405,5 +406,10 @@
     </script>
     <script src="./firebase-config.js?v=5.0.3"></script>
     <script type="module" src="./script.js?v=5.0.3"></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+      }
+    </script>
   </body>
 </html>
