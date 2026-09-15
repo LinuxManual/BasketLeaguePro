@@ -424,8 +424,9 @@ button, .button {
 
 .court-arc { position: absolute; z-index: 1; top: 50%; width: 134px; height: 210px; border: 2px solid rgba(221, 237, 255, .2); border-radius: 50%; transform: translateY(-50%); pointer-events: none; }
 .arc-left { left: -92px; }.arc-right { right: -92px; }
-.court-target { position: absolute; z-index: 2; top: 45%; width: 37px; height: 37px; display: grid; place-items: center; border-radius: 50%; font-family: Orbitron, monospace; font-size: .65rem; font-weight: 900; opacity: .72; animation: targetPulse 1.8s infinite ease-in-out; }
+.court-target { position: absolute; z-index: 2; top: 45%; width: 37px; height: 37px; display: grid; place-items: center; padding: 0; border-radius: 50%; font-family: Orbitron, monospace; font-size: .65rem; font-weight: 900; opacity: .72; cursor: pointer; animation: targetPulse 1.8s infinite ease-in-out; }
 .target-hot { left: 39px; color: #ffd2db; background: rgba(255,65,108,.25); border: 1px solid var(--hot); box-shadow: 0 0 19px var(--hot-glow); }.target-fly { right: 39px; color: #d4fdff; background: rgba(0,242,254,.18); border: 1px solid var(--fly); box-shadow: 0 0 19px var(--fly-glow); }
+.court-target:hover, .court-target:focus-visible { opacity: 1; outline: 2px solid #fff; outline-offset: 3px; }
 @keyframes targetPulse { 50% { transform: scale(1.12); opacity: 1; } }
 .court-ball {
   position: absolute;

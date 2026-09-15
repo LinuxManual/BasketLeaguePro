@@ -60,6 +60,7 @@ let courtScores = { hot: 0, fly: 0 };
 let courtShotClock = 24;
 let courtDragActive = false;
 let courtResetTimer;
+let courtDragged = false;
 
 // SVG Icons
 const SVG_TRASH = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
@@ -352,6 +353,17 @@ function resetCourtBall() {
   updateCourtScoreboard();
 }
 
+function getCourtTargetAtPoint(clientX, clientY) {
+  const targets = els.interactiveCourt.querySelectorAll(".court-target[data-team]");
+  for (const target of targets) {
+    const rect = target.getBoundingClientRect();
+    if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
+      return target.dataset.team;
+    }
+  }
+  return null;
+}
+
 function shootCourtBall(team) {
   if (els.courtBall.classList.contains("is-shooting")) return;
   const isHot = team === "hot";
@@ -382,22 +394,41 @@ function setupInteractiveCourt() {
   els.courtBall.addEventListener("pointerdown", (event) => {
     if (els.courtBall.classList.contains("is-shooting")) return;
     courtDragActive = true;
+    courtDragged = false;
     els.courtBall.setPointerCapture(event.pointerId);
     els.courtBall.classList.add("is-dragging");
     els.courtFeedback.textContent = "Στόχευσε ένα καλάθι…";
     placeBall(event);
   });
   els.courtBall.addEventListener("pointermove", (event) => {
-    if (courtDragActive) placeBall(event);
+    if (!courtDragActive) return;
+    courtDragged = true;
+    placeBall(event);
   });
   els.courtBall.addEventListener("pointerup", (event) => {
     if (!courtDragActive) return;
     courtDragActive = false;
-    const rect = els.interactiveCourt.getBoundingClientRect();
-    shootCourtBall(event.clientX - rect.left < rect.width / 2 ? "hot" : "fly");
+    const team = getCourtTargetAtPoint(event.clientX, event.clientY);
+    if (team) {
+      shootCourtBall(team);
+      return;
+    }
+    els.courtBall.classList.remove("is-dragging");
+    els.courtFeedback.textContent = "Δεν βρήκε στόχο — σύρε την μπάλα πάνω σε ένα +2.";
+  });
+  els.courtBall.addEventListener("pointercancel", () => {
+    courtDragActive = false;
+    els.courtBall.classList.remove("is-dragging");
+    els.courtFeedback.textContent = "Η πάσα ακυρώθηκε — δοκίμασε ξανά.";
   });
   els.courtBall.addEventListener("click", () => {
-    if (!courtDragActive && !els.courtBall.classList.contains("is-shooting")) shootCourtBall("fly");
+    if (!courtDragged && !courtDragActive && !els.courtBall.classList.contains("is-shooting")) {
+      els.courtFeedback.textContent = "Διάλεξε ένα +2 για να σουτάρεις.";
+    }
+  });
+  els.interactiveCourt.addEventListener("click", (event) => {
+    const target = event.target.closest(".court-target[data-team]");
+    if (target && !els.courtBall.classList.contains("is-shooting")) shootCourtBall(target.dataset.team);
   });
 }
 
