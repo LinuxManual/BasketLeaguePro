@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./styles.css?v=5.1.0" />
+    <link rel="stylesheet" href="./styles.css?v=5.0.1" />
   </head>
   <body class="site-locked">
     <section id="entry-gate" class="entry-gate" aria-labelledby="entry-gate-title">
@@ -90,40 +90,18 @@
           </div>
         </div>
 
-        <section class="court-visual" id="interactive-court" aria-labelledby="court-title">
+        <div class="court-visual" aria-hidden="true">
           <div class="court-overlay"></div>
-          <div class="court-noise"></div>
-          <div class="court-topbar">
-            <div>
-              <p class="court-eyebrow">Interactive Arena</p>
-              <h2 id="court-title">Κυκλοφόρησε την μπάλα</h2>
-            </div>
-            <div class="court-live"><span></span> LIVE COURT</div>
-          </div>
-          <div class="court-scoreboard" aria-live="polite">
-            <span class="court-score hot-score">HOT <b id="court-hot-score">00</b></span>
-            <span class="court-clock" id="court-clock">00:24</span>
-            <span class="court-score fly-score"><b id="court-fly-score">00</b> FLY</span>
-          </div>
           <div class="court-line center"></div>
           <div class="court-line ring"></div>
           <div class="court-line key left"></div>
           <div class="court-line key right"></div>
-          <div class="court-arc arc-left"></div>
-          <div class="court-arc arc-right"></div>
           <div class="court-basket left"></div>
           <div class="court-basket right"></div>
-          <div class="court-target target-hot" data-team="hot" aria-hidden="true">+2</div>
-          <div class="court-target target-fly" data-team="fly" aria-hidden="true">+2</div>
-          <div class="court-trail" id="court-trail" aria-hidden="true"></div>
-          <button class="court-ball" id="court-ball" type="button" aria-label="Σύρε ή πάτησε την μπάλα για πάσα" aria-describedby="court-help">
-            <span class="ball-seam seam-one"></span><span class="ball-seam seam-two"></span><span class="ball-seam seam-three"></span>
-          </button>
-          <div class="court-feedback" id="court-feedback" aria-live="polite">Κάνε πάσα προς ένα καλάθι</div>
           <div class="court-label hot">HotHeroes</div>
           <div class="court-label fly">Ιπτάμενοι</div>
-          <p class="court-help" id="court-help">Σύρε την μπάλα ή πάτησέ την για να βάλεις καλάθι.</p>
-        </section>
+          <div class="court-glow-ball"></div>
+        </div>
 
         <div class="metrics-grid" id="insights" aria-live="polite"></div>
       </section>

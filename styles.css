@@ -299,41 +299,30 @@ button, .button {
 /* Basketball Court Visual */
 .court-visual {
   position: relative;
-  min-height: 390px;
+  min-height: 350px;
   border-radius: var(--radius);
-  border: 1px solid rgba(123, 150, 202, 0.25);
-  background: linear-gradient(135deg, rgba(8, 16, 39, 0.96), rgba(14, 35, 64, 0.92)), repeating-linear-gradient(90deg, rgba(91, 147, 179, 0.14) 0 1px, transparent 1px 54px);
-  box-shadow: var(--shadow), inset 0 0 90px rgba(0, 0, 0, 0.42);
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(rgba(10, 15, 30, 0.85), rgba(10, 15, 30, 0.85)),
+    repeating-linear-gradient(90deg, #131c36 0px, #131c36 40px, #16203d 40px, #16203d 80px);
+  box-shadow: var(--shadow);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  isolation: isolate;
-  touch-action: none;
 }
 
 .court-overlay {
   position: absolute;
   inset: 0;
-  z-index: 0;
-  background: radial-gradient(circle at 6% 42%, rgba(255, 65, 108, 0.36), transparent 43%), radial-gradient(circle at 94% 42%, rgba(0, 242, 254, 0.28), transparent 43%), linear-gradient(180deg, rgba(255,255,255,.04), transparent 35%);
+  background: radial-gradient(circle at 10% 50%, var(--hot-glow), transparent 60%),
+              radial-gradient(circle at 90% 50%, var(--fly-glow), transparent 60%);
   pointer-events: none;
 }
 
-.court-noise { position: absolute; inset: 0; opacity: .35; background-image: radial-gradient(rgba(255,255,255,.17) .6px, transparent .7px); background-size: 5px 5px; mix-blend-mode: overlay; pointer-events: none; }
-.court-topbar { position: absolute; z-index: 3; top: 22px; left: 24px; right: 24px; display: flex; align-items: flex-start; justify-content: space-between; }
-.court-eyebrow { color: var(--fly); text-transform: uppercase; font-size: .62rem; font-weight: 900; letter-spacing: .18em; }
-.court-topbar h2 { font-size: 1.25rem; letter-spacing: -.04em; margin-top: 2px; }
-.court-live { display: flex; align-items: center; gap: 7px; padding: 7px 10px; border: 1px solid rgba(46,213,115,.3); border-radius: 999px; color: #bfffe0; background: rgba(4, 35, 31, .45); font-family: Orbitron, monospace; font-size: .58rem; font-weight: 700; letter-spacing: .11em; }
-.court-live span { width: 6px; height: 6px; border-radius: 50%; background: var(--success); box-shadow: 0 0 10px var(--success); animation: pulse 1.4s infinite; }
-.court-scoreboard { position: absolute; z-index: 3; top: 84px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; font-family: Orbitron, monospace; font-weight: 700; font-size: .72rem; white-space: nowrap; }
-.court-score { display: flex; gap: 7px; align-items: center; padding: 7px 9px; border-radius: 7px; background: rgba(5, 10, 22, .6); border: 1px solid rgba(255,255,255,.1); }
-.court-score b { font-size: 1.05rem; }.hot-score { color: #ff91a7; }.fly-score { color: #8bfaff; }.court-clock { padding: 7px 9px; border-radius: 7px; background: #070a12; color: #f7ca70; border: 1px solid rgba(247,202,112,.3); }
-
 .court-line {
   position: absolute;
-  z-index: 1;
-  border: 2px solid rgba(221, 237, 255, 0.26);
+  border: 2px solid rgba(255, 255, 255, 0.15);
   pointer-events: none;
 }
 
@@ -348,8 +337,8 @@ button, .button {
 .court-line.ring {
   top: 50%;
   left: 50%;
-  width: 102px;
-  height: 102px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
   transform: translate(-50%, -50%);
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
@@ -357,8 +346,8 @@ button, .button {
 
 .court-line.key {
   top: 50%;
-  width: 92px;
-  height: 192px;
+  width: 80px;
+  height: 180px;
   transform: translateY(-50%);
   background: rgba(255, 255, 255, 0.02);
 }
@@ -378,13 +367,12 @@ button, .button {
 .court-basket {
   position: absolute;
   top: 50%;
-  z-index: 2;
-  width: 19px;
-  height: 10px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   transform: translateY(-50%);
-  border: 3px solid #ff7b32;
-  box-shadow: 0 0 14px #ff6b35, 0 0 30px rgba(255,123,50,.35);
+  border: 2.5px solid #ff6b35;
+  box-shadow: 0 0 12px #ff6b35;
 }
 
 .court-basket.left {
@@ -422,34 +410,22 @@ button, .button {
   box-shadow: 0 0 15px var(--fly-glow);
 }
 
-.court-arc { position: absolute; z-index: 1; top: 50%; width: 134px; height: 210px; border: 2px solid rgba(221, 237, 255, .2); border-radius: 50%; transform: translateY(-50%); pointer-events: none; }
-.arc-left { left: -92px; }.arc-right { right: -92px; }
-.court-target { position: absolute; z-index: 2; top: 45%; width: 37px; height: 37px; display: grid; place-items: center; border-radius: 50%; font-family: Orbitron, monospace; font-size: .65rem; font-weight: 900; opacity: .72; animation: targetPulse 1.8s infinite ease-in-out; }
-.target-hot { left: 39px; color: #ffd2db; background: rgba(255,65,108,.25); border: 1px solid var(--hot); box-shadow: 0 0 19px var(--hot-glow); }.target-fly { right: 39px; color: #d4fdff; background: rgba(0,242,254,.18); border: 1px solid var(--fly); box-shadow: 0 0 19px var(--fly-glow); }
-@keyframes targetPulse { 50% { transform: scale(1.12); opacity: 1; } }
-.court-ball {
+.court-glow-ball {
   position: absolute;
-  z-index: 5;
-  left: 50%;
-  top: 56%;
-  width: 48px;
-  height: 48px;
-  padding: 0;
-  border: 2px solid #682a10;
-  background: radial-gradient(circle at 31% 26%, #ffc35c 0 6%, #f58b2a 25%, #db5a16 66%, #9b310c 100%);
+  width: 10px;
+  height: 10px;
+  background: #ff9f43;
   border-radius: 50%;
-  box-shadow: 0 9px 13px rgba(0,0,0,.42), 0 0 30px rgba(255,145,45,.35);
-  transform: translate(-50%, -50%);
-  transition: left .16s ease, top .16s ease, box-shadow .2s ease;
-  cursor: grab;
+  box-shadow: 0 0 20px #ff9f43, 0 0 40px #ff9f43;
+  animation: dribble 4s infinite ease-in-out;
 }
-.court-ball:hover, .court-ball:focus-visible { box-shadow: 0 9px 13px rgba(0,0,0,.42), 0 0 0 8px rgba(255,174,68,.14), 0 0 35px rgba(255,145,45,.65); outline: none; }.court-ball.is-dragging { cursor: grabbing; transform: translate(-50%, -50%) scale(1.12); }
-.court-ball span { position: absolute; display: block; background: #6a230e; opacity: .9; }.seam-one { inset: -2px 20px; border-radius: 50%; transform: rotate(27deg); }.seam-two { left: -2px; right: -2px; top: 21px; height: 3px; transform: rotate(-18deg); }.seam-three { width: 60px; height: 25px; left: -7px; top: 10px; background: transparent !important; border-top: 3px solid #6a230e; border-radius: 50%; transform: rotate(73deg); }
-.court-ball.is-shooting { pointer-events: none; animation: shotRight 1s cubic-bezier(.2,.75,.2,1) forwards; }.court-ball.is-shooting.to-hot { animation-name: shotLeft; }
-@keyframes shotRight { 40% { top: 23%; left: 87%; transform: translate(-50%,-50%) scale(.73) rotate(420deg); } 80% { top: 50%; left: 94%; transform: translate(-50%,-50%) scale(.58) rotate(670deg); } to { top: 56%; left: 50%; transform: translate(-50%,-50%) rotate(760deg); } }
-@keyframes shotLeft { 40% { top: 23%; left: 13%; transform: translate(-50%,-50%) scale(.73) rotate(-420deg); } 80% { top: 50%; left: 6%; transform: translate(-50%,-50%) scale(.58) rotate(-670deg); } to { top: 56%; left: 50%; transform: translate(-50%,-50%) rotate(-760deg); } }
-.court-trail { position: absolute; z-index: 3; width: 42%; height: 1px; top: 44%; left: 50%; transform-origin: left; opacity: 0; background: linear-gradient(90deg, rgba(255,201,91,.05), rgba(255,191,68,.9), transparent); }.court-trail.to-hot { transform: rotate(-156deg); }.court-trail.to-fly { transform: rotate(-24deg); }.court-trail.is-visible { animation: trail .7s ease-out forwards; } @keyframes trail { 20% { opacity: 1; } to { opacity: 0; transform: scaleX(.3); } }
-.court-feedback { position: absolute; z-index: 4; left: 50%; bottom: 70px; transform: translateX(-50%); padding: 7px 13px; border-radius: 999px; background: rgba(3,9,23,.62); border: 1px solid rgba(255,255,255,.12); color: #e8efff; font-size: .73rem; font-weight: 700; white-space: nowrap; }.court-help { position: absolute; z-index: 2; bottom: 17px; left: 50%; transform: translateX(-50%); color: #93a5c5; font-size: .67rem; text-align: center; white-space: nowrap; }
+
+@keyframes dribble {
+  0%, 100% { transform: translate(-150px, -20px); }
+  25% { transform: translate(0, 50px); }
+  50% { transform: translate(150px, -20px); }
+  75% { transform: translate(0, -60px); }
+}
 
 /* Metrics Dashboard Widget */
 .metrics-grid {
@@ -1350,20 +1326,6 @@ body:not(.site-locked) .entry-gate { display: none; }
   .metrics-grid {
     grid-template-columns: 1fr 1fr;
   }
-
-  .court-visual { min-height: 350px; }
-  .court-topbar { top: 18px; left: 18px; right: 18px; }
-  .court-topbar h2 { font-size: 1.05rem; }
-  .court-live { font-size: .5rem; padding: 6px 7px; }
-  .court-scoreboard { top: 72px; gap: 5px; font-size: .58rem; }
-  .court-score, .court-clock { padding: 6px; }
-  .court-line.key { width: 64px; height: 160px; }
-  .court-arc { width: 105px; height: 176px; }
-  .arc-left { left: -75px; }.arc-right { right: -75px; }
-  .court-basket.left { left: 17px; }.court-basket.right { right: 17px; }
-  .court-target { top: 46%; }.target-hot { left: 26px; }.target-fly { right: 26px; }
-  .court-feedback { bottom: 58px; font-size: .63rem; max-width: calc(100% - 30px); overflow: hidden; text-overflow: ellipsis; }
-  .court-help { bottom: 15px; font-size: .57rem; }
 
   .entry-gate { padding: 14px; }
   .entry-card { padding: 24px 18px; }
