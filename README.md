@@ -61,3 +61,12 @@ Version 7 turns the dashboard into a lightweight basketball operations system.
 
 - Στους κανονικούς αγώνες καταχωρείται μόνο το τελικό σκορ.
 - Οι αγώνες 1v1 έχουν ξεχωριστή δημιουργία, λίστα και τελικό σκορ ανά παίκτη.
+
+
+## V8 — Gemini AI Chatbot
+- Public AI chatbot UI inside the dashboard.
+- Server-side `/api/ai-chat` proxy using Google's Gemini Interactions API.
+- The Gemini API key is never committed to the repository or sent to the browser.
+- Configure `GEMINI_API_KEY` on the Node server. Optionally set `GEMINI_MODEL`; default: `gemini-flash-latest`.
+- **Important:** GitHub Pages is static and cannot execute `server.js`; the AI endpoint requires a Node-capable deployment/proxy.
+- 1v1 score entry is already present via **Καταχώρηση σκορ** and `POST /api/one-v-one-score`.
