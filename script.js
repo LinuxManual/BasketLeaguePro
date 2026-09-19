@@ -5,7 +5,10 @@ const TEAMS = [TEAM_HOT, TEAM_FLY];
 const STORAGE_KEY = "basketleaguepro:v5";
 const USE_STATIC_STORE = location.hostname.endsWith("github.io");
 const CLOUD_DOC_PATH = ["leagues", "basketleaguepro", "state", "live"];
-const AI_API_URL = location.hostname.endsWith("github.io")\n  ? String(globalThis.__AI_API_URL__ || "").trim()\n  : "/api/ai-chat";\n
+const GEMINI_MODEL = "gemini-3.8-flash";
+const GEMINI_API_KEY = String(globalThis.__GEMINI_API_KEY__ || "").trim();
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent";
+
 let cloudReady = false;
 let cloudSyncBusy = false;
 let cloudDocRef = null;
@@ -1102,27 +1105,52 @@ function appendAiMessage(role, message) {
 }
 async function sendAiMessage(message) {
   if (aiBusy) return;
-  const textValue = String(message || "").trim(); if (!textValue) return;
-  aiBusy=true; appendAiMessage("user",textValue); aiHistory.push({role:"user",text:textValue});
-  els.aiChatInput.value=""; els.aiChatInput.disabled=true; els.aiChatStatus.textContent="Το AI γράφει…";
+  const textValue = String(message || "").trim();
+  if (!textValue) return;
+  aiBusy = true;
+  appendAiMessage("user", textValue);
+  aiHistory.push({ role: "user", text: textValue });
+  els.aiChatInput.value = "";
+  els.aiChatInput.disabled = true;
+  els.aiChatStatus.textContent = "Το AI γράφει…";
   try {
-    if(!GEMINI_API_KEY) throw new Error("Το Gemini API key δεν έχει ρυθμιστεί.");
+    if (!GEMINI_API_KEY) throw new Error("Το Gemini API key δεν έχει ρυθμιστεί.");
     const contents = aiHistory.slice(-12).map(item => ({
       role: item.role === "assistant" ? "model" : "user",
       parts: [{ text: String(item.text || "").trim().slice(0, 4000) }]
     }));
-    const response=await fetch(GEMINI_API_URL,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":GEMINI_API_KEY},body:JSON.stringify({
-      systemInstruction:{parts:[{text:"You are BasketLeague AI, the public assistant inside BasketLeaguePro. Answer clearly and helpfully. You can discuss general topics, basketball, technology, coding, science, and everyday questions. Do not claim access to live data unless it is provided. Prefer Greek when the user writes Greek."}]},
-      contents,
-      generationConfig:{maxOutputTokens:1200,thinkingConfig:{thinkingLevel:"medium"}}
-    })});
-    const data=await response.json().catch(()=>({}));
-    if(!response.ok) throw new Error(data.error||"Το AI δεν είναι διαθέσιμο αυτή τη στιγμή.");
-    const answer=String(data.text||"").trim(); if(!answer) throw new Error("Δεν επιστράφηκε απάντηση από το AI.");
-    aiHistory.push({role:"assistant",text:answer}); appendAiMessage("assistant",answer); els.aiChatStatus.textContent="Gemini AI • έτοιμο";
-  } catch(error) {
-    aiHistory.pop(); appendAiMessage("assistant","⚠️ "+error.message); els.aiChatStatus.textContent="Το Gemini χρειάζεται ρύθμιση (GEMINI_API_KEY).";
-  } finally { aiBusy=false; els.aiChatInput.disabled=false; els.aiChatInput.focus(); }
+    const response = await fetch(GEMINI_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": GEMINI_API_KEY
+      },
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{
+            text: "You are BasketLeague AI, the public assistant inside BasketLeaguePro. Answer clearly and helpfully. Prefer Greek when the user writes Greek."
+          }]
+        },
+        contents,
+        generationConfig: { maxOutputTokens: 1200 }
+      })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data?.error?.message || "Το Gemini API επέστρεψε σφάλμα.");
+    const answer = String(data?.candidates?.[0]?.content?.parts?.filter(p => typeof p?.text === "string").map(p => p.text).join("\n") || "").trim();
+    if (!answer) throw new Error("Δεν επιστράφηκε απάντηση από το Gemini.");
+    aiHistory.push({ role: "assistant", text: answer });
+    appendAiMessage("assistant", answer);
+    els.aiChatStatus.textContent = "Gemini AI • έτοιμο";
+  } catch (error) {
+    aiHistory.pop();
+    appendAiMessage("assistant", "⚠️ " + (error?.message || "Άγνωστο σφάλμα."));
+    els.aiChatStatus.textContent = "Σφάλμα Gemini";
+  } finally {
+    aiBusy = false;
+    els.aiChatInput.disabled = false;
+    els.aiChatInput.focus();
+  }
 }
 els.aiChatForm?.addEventListener("submit",(event)=>{event.preventDefault();sendAiMessage(els.aiChatInput.value);});
 els.aiClear?.addEventListener("click",()=>{
