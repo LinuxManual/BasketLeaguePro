@@ -2370,64 +2370,83 @@ input,select,textarea{ min-height:46px; }
   .segmented button{flex:1}
 }
 
-/* MOBILE SCALE v18 — slightly larger, still compact */
+/* MOBILE SCALE v19 — clearly larger touch-first typography and controls */
 @media (max-width:768px){
-  .brand-mark{width:40px;height:40px;flex-basis:40px}
-  .title-main{font-size:1rem}
-  .title-sub{font-size:.54rem}
-  .topbar .icon-button{width:42px;height:42px;flex-basis:42px}
+  body{font-size:16px}
+  main{padding-top:16px}
+  .topbar{min-height:64px;padding:11px 13px}
+  .brand{gap:10px}
+  .brand-mark{width:43px;height:43px;flex-basis:43px}
+  .title-main{font-size:1.08rem}
+  .title-sub{font-size:.58rem}
+  .topbar .icon-button{width:45px;height:45px;flex-basis:45px}
 
-  .topbar nav.mobile-bottom-nav a{
-    height:60px;
-    font-size:.58rem;
-    gap:5px;
-  }
+  .topbar nav.mobile-bottom-nav a{height:62px;font-size:.64rem;gap:6px}
   .topbar nav.mobile-bottom-nav a svg,
-  .topbar nav.mobile-bottom-nav a span{
-    width:19px;height:19px;
-  }
+  .topbar nav.mobile-bottom-nav a span{width:21px;height:21px}
 
-  main{padding-top:14px}
-  .hero-copy{padding:24px 19px 20px}
-  h1{font-size:clamp(2.1rem,10vw,2.85rem)}
-  .hero-text{font-size:.84rem;line-height:1.5}
-  .hero-actions .button{min-height:48px;font-size:.76rem}
-  .court-visual{min-height:140px;height:140px}
+  .hero{gap:12px;margin-bottom:20px}
+  .hero-copy{padding:27px 21px 22px}
+  .kicker{font-size:.64rem;margin-bottom:10px}
+  h1{font-size:clamp(2.25rem,10.8vw,3rem);line-height:1}
+  .hero-text{font-size:.9rem;line-height:1.55;margin-bottom:18px}
+  .hero-actions{gap:9px}
+  .hero-actions .button{min-height:52px;font-size:.81rem;padding:10px 8px}
+  .court-visual{min-height:150px;height:150px}
 
-  .metric{padding:13px 14px}
-  .metric b{font-size:1.35rem}
-  .metric span{font-size:.62rem}
+  .metrics-grid{gap:9px}
+  .metric{padding:15px 15px;border-radius:15px}
+  .metric b{font-size:1.48rem}
+  .metric span{font-size:.68rem}
 
-  .panel{padding:17px}
-  h2{font-size:1.08rem}
-  .section-label{font-size:.59rem}
-  .team-column{padding:11px}
-  .team-heading h3{font-size:.77rem}
-  .player-row{padding:9px 8px;font-size:.72rem}
-  .player-name{font-size:.75rem}
+  .workspace-grid,.workspace-grid.compact{gap:12px;margin-bottom:20px}
+  .panel{padding:19px;border-radius:20px}
+  .panel-heading{margin-bottom:14px}
+  .section-label{font-size:.63rem}
+  h2{font-size:1.16rem}
+  h3{font-size:1rem}
 
-  .form-title{font-size:.82rem}
-  .form-group label{font-size:.65rem}
-  input,select,textarea{min-height:46px;font-size:.81rem}
-  .button-submit{min-height:47px;font-size:.77rem}
+  .roster-grid{gap:9px}
+  .team-column{padding:13px;border-radius:14px}
+  .team-heading h3{font-size:.82rem}
+  .player-row{padding:10px 9px;font-size:.76rem}
+  .player-name{font-size:.79rem}
+  .player-num-tag{width:28px;height:28px}
 
-  .control-actions .ghost{min-height:41px;font-size:.61rem}
-  .search-box{min-height:47px}
-  .segmented button{min-height:37px;font-size:.63rem}
+  .stacked-form{gap:11px}
+  .form-title{font-size:.86rem}
+  .form-group{gap:5px}
+  .form-group label{font-size:.69rem}
+  input,select,textarea{min-height:50px;padding:10px 12px;font-size:.86rem;border-radius:11px}
+  .button-submit{min-height:51px;font-size:.81rem}
 
-  th,td{padding:10px 9px;font-size:.69rem}
+  .control-actions{gap:7px}
+  .control-actions .ghost{min-height:45px;font-size:.66rem}
+  .search-box{min-height:50px}
+  .segmented button{min-height:41px;font-size:.68rem}
 
-  .emoji-btn{min-height:42px;font-size:1.25rem}
-  .send-btn{min-height:42px;min-width:88px;font-size:.76rem}
+  th,td{padding:11px 10px;font-size:.74rem}
+  .button-sim-action{min-height:44px}
 
-  .ai-message{font-size:.83rem;padding:10px 11px}
-  .ai-chat-form input,.ai-chat-form .button{min-height:48px}
-  .ai-chat-status{font-size:.68rem}
+  .emoji-btn{min-height:45px;font-size:1.35rem}
+  .send-btn{min-height:45px;min-width:94px;font-size:.8rem}
+  .message-list li{padding:11px 12px}
+  .message-text{font-size:.92rem}
+
+  .ai-messages{padding:12px;gap:8px}
+  .ai-message{font-size:.88rem;padding:11px 12px;line-height:1.5}
+  .ai-chat-form input,.ai-chat-form .button{min-height:51px}
+  .ai-chat-form .button{font-size:.79rem}
+  .ai-chat-status{font-size:.72rem}
 }
 @media(max-width:430px){
-  .topbar nav.mobile-bottom-nav a{font-size:.55rem}
-  .hero-copy{padding:21px 17px 19px}
-  h1{font-size:clamp(2rem,10.2vw,2.5rem)}
-  .panel{padding:15px}
+  .hero-copy{padding:24px 19px 21px}
+  h1{font-size:clamp(2.15rem,10.8vw,2.7rem)}
+  .panel{padding:17px}
+  .metric{padding:14px}
 }
-
+@media(max-width:360px){
+  .hero-copy{padding:22px 17px 19px}
+  h1{font-size:2.05rem}
+  .panel{padding:16px}
+}
