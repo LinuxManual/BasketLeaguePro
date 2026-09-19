@@ -5,7 +5,7 @@ const TEAMS = [TEAM_HOT, TEAM_FLY];
 const STORAGE_KEY = "basketleaguepro:v5";
 const USE_STATIC_STORE = location.hostname.endsWith("github.io");
 const CLOUD_DOC_PATH = ["leagues", "basketleaguepro", "state", "live"];
-const GEMINI_MODEL = "gemini-3.8-flash";
+const GEMINI_MODEL = "gemini-3.6-flash";
 const GEMINI_API_KEY = String(globalThis.__GEMINI_API_KEY__ || "").trim();
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent";
 
@@ -968,11 +968,31 @@ document.getElementById("match-form")?.addEventListener("submit", (event) => {
 });
 
 document.getElementById("one-v-one-form")?.addEventListener("submit", (event) => {
-  event.preventDefault(); const form=event.currentTarget;
-  handleSubmit(form,()=>api("one-v-one",{method:"POST",body:JSON.stringify({
-    playerA:document.getElementById("one-v-one-player-a").value, playerB:document.getElementById("one-v-one-player-b").value,
-    date:document.getElementById("one-v-one-date").value, time:document.getElementById("one-v-one-time").value, court:document.getElementById("one-v-one-court").value
-  })}),"Ο αγώνας 1v1 δημιουργήθηκε.");
+  event.preventDefault();
+  const form = event.currentTarget;
+  const playerA = document.getElementById("one-v-one-player-a")?.value?.trim() || "";
+  const playerB = document.getElementById("one-v-one-player-b")?.value?.trim() || "";
+  const date = document.getElementById("one-v-one-date")?.value || "";
+  const time = document.getElementById("one-v-one-time")?.value || "";
+  const court = document.getElementById("one-v-one-court")?.value?.trim() || "";
+
+  if (!playerA || !playerB || !date || !time || !court) {
+    showToast("Συμπλήρωσε όλα τα πεδία του 1v1.");
+    return;
+  }
+  if (playerA.toLocaleLowerCase("el-GR") === playerB.toLocaleLowerCase("el-GR")) {
+    showToast("Οι δύο παίκτες πρέπει να είναι διαφορετικοί.");
+    return;
+  }
+
+  handleSubmit(
+    form,
+    () => api("one-v-one", {
+      method: "POST",
+      body: JSON.stringify({ playerA, playerB, date, time, court })
+    }),
+    "Ο αγώνας 1v1 δημιουργήθηκε."
+  );
 });
 document.getElementById("score-form")?.addEventListener("submit", (event) => {
   event.preventDefault();
