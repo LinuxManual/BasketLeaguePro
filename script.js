@@ -1107,7 +1107,7 @@ async function sendAiMessage(message) {
   aiBusy=true; appendAiMessage("user",textValue); aiHistory.push({role:"user",text:textValue});
   els.aiChatInput.value=""; els.aiChatInput.disabled=true; els.aiChatStatus.textContent="Το AI γράφει…";
   try {
-    if(!AI_API_URL) throw new Error("Το AI endpoint δεν έχει ρυθμιστεί. Χρησιμοποίησε το Vercel deployment του project.");
+    if(!AI_API_URL) throw new Error("Το AI endpoint δεν έχει ρυθμιστεί. Χρησιμοποίησε το Firebase deployment του project.");
     const response=await fetch(AI_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:aiHistory.slice(-12)})});
     const data=await response.json().catch(()=>({}));
     if(!response.ok) throw new Error(data.error||"Το AI δεν είναι διαθέσιμο αυτή τη στιγμή.");
