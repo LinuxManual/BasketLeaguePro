@@ -71,7 +71,6 @@ function loadStore() {
     },
     matches: Array.isArray(parsed?.matches) ? parsed.matches : [],
     messages: Array.isArray(parsed?.messages) ? parsed.messages : [],
-    playerStats: Array.isArray(parsed?.playerStats) ? parsed.playerStats : []
   };
 }
 
@@ -140,19 +139,6 @@ function readBody(req) {
 function createId() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-function normalizePlayerStat(item) {
-  if (!item || !item.matchId || !item.player) return null;
-  const int = (v) => Math.max(0, Math.min(99, Number.parseInt(v, 10) || 0));
-  return {
-    id: String(item.id || createId()),
-    matchId: String(item.matchId),
-    team: TEAMS.includes(item.team) ? item.team : TEAM_HOT,
-    player: normalizeText(item.player, MAX_NAME_LENGTH),
-    points: int(item.points), rebounds: int(item.rebounds), assists: int(item.assists),
-    steals: int(item.steals), blocks: int(item.blocks), turnovers: int(item.turnovers)
-  };
 }
 
 function scoreIsValid(value) {
@@ -304,25 +290,37 @@ async function handleScores(req, res) {
   }
 }
 
-async function handleStats(req, res) {
+async function handleOneVOne(req, res) {
   try {
-    if (req.method !== "POST") return sendJson(res, 405, { error: "Method not allowed" });
-    const body = await readBody(req);
-    const stat = normalizePlayerStat(body);
-    if (!stat) return sendJson(res, 400, { error: "Invalid player stat payload" });
-    const store = loadStore();
-    const match = store.matches.find(m => m.id === stat.matchId);
-    if (!match) return sendJson(res, 404, { error: "Match not found" });
-    if (!store.rosters[stat.team].some(p => p.name.toLocaleLowerCase("el-GR") === stat.player.toLocaleLowerCase("el-GR"))) {
-      return sendJson(res, 404, { error: "Player not found in roster" });
+    if (req.method === "POST") {
+      const body = await readBody(req);
+      const date = normalizeText(body.date, 10), time = normalizeText(body.time, 5), court = normalizeText(body.court, MAX_NAME_LENGTH);
+      const playerA = normalizeText(body.playerA, MAX_NAME_LENGTH), playerB = normalizeText(body.playerB, MAX_NAME_LENGTH);
+      if (!date || !time || !court || !playerA || !playerB || playerA.toLocaleLowerCase("el-GR") === playerB.toLocaleLowerCase("el-GR") || !isValidDate(date) || !isValidTime(time)) return sendJson(res,400,{error:"Συμπλήρωσε σωστά τους δύο διαφορετικούς παίκτες, ημερομηνία, ώρα και γήπεδο."});
+      const store = loadStore();
+      store.matches.push({ id:createId(), type:"1v1", date, time, court, playerA, playerB, scoreA:null, scoreB:null });
+      store.matches.sort((a,b)=>new Date(`${a.date}T${a.time}`)-new Date(`${b.date}T${b.time}`));
+      saveStore(store); return sendJson(res,200,store);
     }
-    const idx = store.playerStats.findIndex(s => s.matchId === stat.matchId && s.team === stat.team && s.player.toLocaleLowerCase("el-GR") === stat.player.toLocaleLowerCase("el-GR"));
-    if (idx >= 0) store.playerStats[idx] = stat; else store.playerStats.push(stat);
-    saveStore(store);
-    return sendJson(res, 200, store);
-  } catch (error) { return sendJson(res, 400, { error: error.message }); }
+    if (req.method === "DELETE") {
+      const body=await readBody(req), matchId=String(body.matchId||""), store=loadStore();
+      const before=store.matches.length; store.matches=store.matches.filter(m=>m.id!==matchId);
+      if(store.matches.length===before) return sendJson(res,404,{error:"Match not found"});
+      saveStore(store); return sendJson(res,200,store);
+    }
+    return sendJson(res,405,{error:"Method not allowed"});
+  } catch(error) { return sendJson(res,400,{error:error.message}); }
 }
 
+async function handleOneVOneScore(req,res) {
+  try {
+    if(req.method!=="POST") return sendJson(res,405,{error:"Method not allowed"});
+    const body=await readBody(req), matchId=String(body.matchId||""), scoreA=Number.parseInt(body.scoreA,10), scoreB=Number.parseInt(body.scoreB,10), store=loadStore();
+    const match=store.matches.find(m=>m.id===matchId && m.type==="1v1");
+    if(!match || !scoreIsValid(scoreA) || !scoreIsValid(scoreB)) return sendJson(res,400,{error:"Invalid 1v1 score payload"});
+    match.scoreA=scoreA; match.scoreB=scoreB; saveStore(store); return sendJson(res,200,store);
+  } catch(error) { return sendJson(res,400,{error:error.message}); }
+}
 async function handleChat(req, res) {
   try {
     const store = loadStore();
@@ -364,11 +362,12 @@ const server = http.createServer(async (req, res) => {
   }
   if (pathname === "/api/players") return handlePlayers(req, res);
   if (pathname === "/api/matches") return handleMatches(req, res);
+  if (pathname === "/api/one-v-one") return handleOneVOne(req, res);
+  if (pathname === "/api/one-v-one-score" && req.method === "POST") return handleOneVOneScore(req, res);
   if (pathname === "/api/scores" && req.method === "POST") return handleScores(req, res);
-  if (pathname === "/api/stats" && req.method === "POST") return handleStats(req, res);
   if (pathname === "/api/chat" && ["POST", "DELETE"].includes(req.method)) return handleChat(req, res);
   if (pathname === "/api/health" && req.method === "GET") {
-    return sendJson(res, 200, { ok: true, version: "7.0.0", uptime: process.uptime() });
+    return sendJson(res, 200, { ok: true, version: "7.1.0", uptime: process.uptime() });
   }
 
   if (pathname.startsWith("/api/")) {
