@@ -20,6 +20,7 @@ const els = {
   hotCount: document.getElementById("hot-count"),
   flyCount: document.getElementById("fly-count"),
   matchesBody: document.getElementById("matches-body"),
+  oneVOneMatchesBody: document.getElementById("one-v-one-matches-body"),
   matchId: document.getElementById("match-id"),
   messages: document.getElementById("messages"),
   toast: document.getElementById("toast"),
@@ -66,7 +67,7 @@ function teamForm(team) {
 }
 
 function renderCommandCenter() {
-  const next = state.matches.filter(m => !isCompleted(m)).sort((a,b)=>new Date(`${a.date}T${a.time}`)-new Date(`${b.date}T${b.time}`))[0];
+  const next = state.matches.filter(m => isTeamMatch(m) && !isCompleted(m)).sort((a,b)=>new Date(`${a.date}T${a.time}`)-new Date(`${b.date}T${b.time}`))[0];
   const nextEl = document.getElementById("next-match");
   const metaEl = document.getElementById("next-match-meta");
   if (next) {
@@ -480,14 +481,14 @@ function buildStandings(matches) {
 
 function renderMetrics() {
   const completed = state.matches.filter(m => isTeamMatch(m) && isCompleted(m));
-  const upcoming = state.matches.length - completed.length;
+  const upcoming = state.matches.filter(m => isTeamMatch(m) && !isCompleted(m)).length;
   const totalPlayers = TEAMS.reduce((sum, team) => sum + state.rosters[team].length, 0);
   const avgPoints = completed.length
     ? Math.round(completed.reduce((sum, match) => sum + match.hotScore + match.flyScore, 0) / completed.length)
     : 0;
 
   const metrics = [
-    ["Αγώνες", state.matches.length],
+    ["Αγώνες ομάδων", state.matches.filter(isTeamMatch).length],
     ["Τελικοί", completed.length],
     ["Επόμενοι", upcoming],
     ["Παίκτες", totalPlayers],
