@@ -1,70 +1,62 @@
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") return res.status(204).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return res.status(503).json({ error: "Το AI δεν έχει ρυθμισμένο GEMINI_API_KEY στον server." });
-  }
+  if (!apiKey) return res.status(503).json({ error: "Το AI δεν έχει ρυθμισμένο GEMINI_API_KEY." });
 
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
     const messages = Array.isArray(body.messages) ? body.messages.slice(-12) : [];
     const safeMessages = messages
       .map((item) => ({
-        role: item && item.role === "assistant" ? "assistant" : "user",
-        text: String(item && item.text || "").trim().replace(/\s+/g, " ").slice(0, 4000)
+        role: item && item.role === "assistant" ? "model" : "user",
+        text: String(item && item.text || "").trim().slice(0, 4000)
       }))
       .filter((item) => item.text);
 
-    if (!safeMessages.length) {
-      return res.status(400).json({ error: "Γράψε πρώτα μια ερώτηση." });
+    if (!safeMessages.length) return res.status(400).json({ error: "Γράψε πρώτα μια ερώτηση." });
+
+    const contents = [];
+    let lastRole = null;
+    for (const message of safeMessages) {
+      if (message.role === lastRole && contents.length) {
+        contents[contents.length - 1].parts[0].text += "\n\n" + message.text;
+      } else {
+        contents.push({ role: message.role, parts: [{ text: message.text }] });
+        lastRole = message.role;
+      }
     }
 
-    const conversation = safeMessages
-      .map((item) => (item.role === "assistant" ? "Assistant: " : "User: ") + item.text)
-      .join("\n\n");
-
-    const prompt =
-      "You are BasketLeague AI, the public assistant inside BasketLeaguePro. " +
-      "Answer clearly and helpfully. You can discuss general topics, basketball, technology, coding, science, and everyday questions. " +
-      "Do not claim access to live data unless it is provided. Prefer the user's language when practical.\n\nConversation:\n" +
-      conversation;
-
-    const upstream = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+    const upstream = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey
-      },
+      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       body: JSON.stringify({
-        model: process.env.GEMINI_MODEL || "gemini-flash-latest",
-        input: prompt,
-        store: false,
-        generation_config: { max_output_tokens: 1200 }
+        systemInstruction: {
+          parts: [{ text: "You are BasketLeague AI, the public assistant inside BasketLeaguePro. Answer clearly and helpfully. You can discuss general topics, basketball, technology, coding, science, and everyday questions. Do not claim access to live data unless it is provided. Prefer Greek when the user writes Greek." }]
+        },
+        contents,
+        generationConfig: { maxOutputTokens: 1200, temperature: 0.7 }
       })
     });
 
     const data = await upstream.json().catch(() => ({}));
     if (!upstream.ok) {
       console.error("Gemini API error:", upstream.status, data);
-      return res.status(502).json({ error: "Το Gemini API επέστρεψε σφάλμα. Έλεγξε το API key και τα όρια χρήσης." });
+      return res.status(502).json({ error: data?.error?.message || "Το Gemini API επέστρεψε σφάλμα." });
     }
 
-    const answer = Array.isArray(data.steps)
-      ? data.steps
-          .filter((step) => step && step.type === "model_output")
-          .flatMap((step) => Array.isArray(step.content) ? step.content : [])
-          .filter((part) => part && part.type === "text")
-          .map((part) => part.text)
-          .join("\n")
-      : "";
+    const answer = data?.candidates?.[0]?.content?.parts
+      ?.filter((part) => typeof part?.text === "string")
+      .map((part) => part.text)
+      .join("\n")
+      .trim();
 
-    if (!answer) {
-      return res.status(502).json({ error: "Το Gemini API δεν επέστρεψε κείμενο." });
-    }
-
+    if (!answer) return res.status(502).json({ error: "Το Gemini δεν επέστρεψε κείμενο." });
     return res.status(200).json({ text: answer });
   } catch (error) {
     console.error("AI chat error:", error);

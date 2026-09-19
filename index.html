@@ -6,12 +6,12 @@
     <meta name="theme-color" content="#0a0f1d" />
     <meta name="description" content="BasketLeague Pro premium dashboard for basketball rosters, matches, scores, and team chat." />
     <link rel="manifest" href="./manifest.json" />
-    <title>BasketLeague Pro 8.0.0 — Basketball OS</title>
+    <title>BasketLeague Pro 9.0.0 — Basketball OS</title>
     <!-- Premium Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./styles.css?v=8.0.0" />
+    <link rel="stylesheet" href="./styles.css?v=9.0.0" />
   </head>
   <body class="site-locked">
     <section id="entry-gate" class="entry-gate" aria-labelledby="entry-gate-title">
@@ -60,6 +60,7 @@
           Αγώνες
         </a>
         <a href="#one-v-one-matches"><span aria-hidden="true">🥊</span> 1v1</a>
+        <a href="#ai-chat"><span aria-hidden="true">✦</span> AI</a>
         <a href="#chat">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
           Chat
@@ -515,8 +516,8 @@
         input.focus();
       })();
     </script>
-    <script src="./firebase-config.js?v=8.0.0"></script>
-    <script type="module" src="./script.js?v=8.0.0"></script>
+    <script src="./firebase-config.js?v=9.0.0"></script>
+    <script type="module" src="./script.js?v=9.0.0"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
