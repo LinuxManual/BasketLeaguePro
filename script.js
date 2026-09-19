@@ -1137,7 +1137,8 @@ async function sendAiMessage(message) {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data?.error?.message || "Το Gemini API επέστρεψε σφάλμα.");
-    const answer = String(data?.candidates?.[0]?.content?.parts?.filter(p => typeof p?.text === "string").map(p => p.text).join("\n") || "").trim();
+    const answer = String(data?.candidates?.[0]?.content?.parts?.filter(p => typeof p?.text === "string").map(p => p.text).join("
+") || "").trim();
     if (!answer) throw new Error("Δεν επιστράφηκε απάντηση από το Gemini.");
     aiHistory.push({ role: "assistant", text: answer });
     appendAiMessage("assistant", answer);
@@ -1171,7 +1172,8 @@ function applySearchFilter(){
   document.querySelectorAll("#matches-body tr").forEach(el=>el.hidden=!!q && !el.textContent.toLocaleLowerCase("el-GR").includes(q));
   document.querySelectorAll("#messages > li").forEach(el=>el.hidden=!!q && !el.textContent.toLocaleLowerCase("el-GR").includes(q));
 }
-document.getElementById("export-data")?.addEventListener("click", exportState);\n
+document.getElementById("export-data")?.addEventListener("click", exportState);
+
 document.getElementById("theme-toggle")?.addEventListener("click",()=>document.body.classList.toggle("light-theme"));
 document.getElementById("global-search")?.addEventListener("input",e=>{searchQuery=e.target.value;applySearchFilter();});
 document.getElementById("focus-next")?.addEventListener("click",()=>document.getElementById("matches")?.scrollIntoView({behavior:"smooth",block:"start"}));
