@@ -50,6 +50,79 @@ let simScoreHot = 0;
 let simScoreFly = 0;
 let simSpeed = 1; // 1x or 5x
 
+let countdownTimer = null;
+let searchQuery = "";
+
+function completedResults() {
+  return state.matches.filter(isCompleted);
+}
+
+function teamForm(team) {
+  return completedResults().slice().sort((a,b)=>new Date(`${b.date}T${b.time}`)-new Date(`${a.date}T${a.time}`)).slice(0,5).map(match => {
+    const own = team === TEAM_HOT ? match.hotScore : match.flyScore;
+    const opp = team === TEAM_HOT ? match.flyScore : match.hotScore;
+    return own > opp ? "W" : own < opp ? "L" : "D";
+  });
+}
+
+function renderCommandCenter() {
+  const next = state.matches.filter(m => !isCompleted(m)).sort((a,b)=>new Date(`${a.date}T${a.time}`)-new Date(`${b.date}T${b.time}`))[0];
+  const nextEl = document.getElementById("next-match");
+  const metaEl = document.getElementById("next-match-meta");
+  if (next) {
+    nextEl.textContent = `${TEAM_HOT}  vs  ${TEAM_FLY}`;
+    metaEl.textContent = `${formatDate(next.date)} • ${next.time} • ${next.court}`;
+    nextEl.dataset.matchId = next.id;
+  } else {
+    nextEl.textContent = "—";
+    metaEl.textContent = "Δεν υπάρχει προγραμματισμένος αγώνας.";
+  }
+
+  const forms = [[TEAM_HOT, teamForm(TEAM_HOT)], [TEAM_FLY, teamForm(TEAM_FLY)]];
+  const formStrip = document.getElementById("form-strip");
+  if (formStrip) {
+    formStrip.replaceChildren(...forms.flatMap(([team, form]) => [
+      createNode("span",{className:"form-team",text:team}),
+      ...form.map(v=>createNode("b",{className:`form-${v.toLowerCase()}`,text:v}))
+    ]));
+  }
+  const summary=document.getElementById("form-summary");
+  if(summary){
+    const games=completedResults();
+    const total=games.reduce((s,m)=>s+m.hotScore+m.flyScore,0);
+    summary.textContent=games.length ? `${games.length} τελικοί • ${Math.round(total/games.length)} πόντοι/αγώνα` : "Πρόσθεσε τελικά σκορ για να εμφανιστεί η φόρμα.";
+  }
+
+  const chart=document.getElementById("scoring-chart");
+  if(chart){
+    const games=completedResults().slice(-8);
+    const max=Math.max(1,...games.flatMap(m=>[m.hotScore,m.flyScore]));
+    chart.replaceChildren(...games.map(m=>{
+      const wrap=createNode("div",{className:"chart-bar-group",attrs:{title:`${m.court}: ${m.hotScore}-${m.flyScore}`}});
+      wrap.append(createNode("i",{className:"bar hot-bar",attrs:{style:`height:${Math.max(8,(m.hotScore/max)*100)}%`}}));
+      wrap.append(createNode("i",{className:"bar fly-bar",attrs:{style:`height:${Math.max(8,(m.flyScore/max)*100)}%`}}));
+      return wrap;
+    }));
+  }
+  updateCountdown(next);
+}
+
+function updateCountdown(match){
+  const el=document.getElementById("countdown");
+  if(!el) return;
+  if(!match){el.textContent="—"; return;}
+  const target=new Date(`${match.date}T${match.time}`).getTime();
+  const diff=target-Date.now();
+  if(diff<=0){el.textContent="LIVE / NOW"; return;}
+  const d=Math.floor(diff/86400000), h=Math.floor(diff/3600000)%24, m=Math.floor(diff/60000)%60;
+  el.textContent=d?`${d}d ${h}h`:`${h}h ${m}m`;
+}
+
+function exportState(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="basketleaguepro-backup.json"; a.click(); URL.revokeObjectURL(a.href);
+}
+
 // SVG Icons
 const SVG_TRASH = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
 const SVG_SIMULATE = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>`;
@@ -577,6 +650,8 @@ function render() {
   renderRosters();
   renderMatches();
   renderMessages();
+  renderCommandCenter();
+  applySearchFilter();
 }
 
 async function refresh(silent = false) {
@@ -952,3 +1027,21 @@ render();
 refresh(true);
 enableCloudSync();
 window.setInterval(() => refresh(true), 5000);
+
+
+function applySearchFilter(){
+  const q=searchQuery.trim().toLocaleLowerCase("el-GR");
+  document.querySelectorAll(".player-row").forEach(el=>el.closest("li").hidden=!!q && !el.textContent.toLocaleLowerCase("el-GR").includes(q));
+  document.querySelectorAll("#matches-body tr").forEach(el=>el.hidden=!!q && !el.textContent.toLocaleLowerCase("el-GR").includes(q));
+  document.querySelectorAll("#messages > li").forEach(el=>el.hidden=!!q && !el.textContent.toLocaleLowerCase("el-GR").includes(q));
+}
+document.getElementById("export-data")?.addEventListener("click", exportState);
+document.getElementById("theme-toggle")?.addEventListener("click",()=>document.body.classList.toggle("light-theme"));
+document.getElementById("global-search")?.addEventListener("input",e=>{searchQuery=e.target.value;applySearchFilter();});
+document.getElementById("focus-next")?.addEventListener("click",()=>document.getElementById("matches")?.scrollIntoView({behavior:"smooth",block:"start"}));
+document.getElementById("notify-btn")?.addEventListener("click",async()=>{
+  if(!("Notification" in window)){showToast("Οι ειδοποιήσεις δεν υποστηρίζονται.");return;}
+  const p=await Notification.requestPermission();
+  showToast(p==="granted"?"Οι ειδοποιήσεις ενεργοποιήθηκαν.":"Η άδεια ειδοποιήσεων δεν δόθηκε.");
+});
+window.setInterval(()=>renderCommandCenter(),30000);
