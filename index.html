@@ -6,12 +6,12 @@
     <meta name="theme-color" content="#0a0f1d" />
     <meta name="description" content="BasketLeague Pro premium dashboard for basketball rosters, matches, scores, and team chat." />
     <link rel="manifest" href="./manifest.json" />
-    <title>BasketLeague Pro 7.1.0 — Basketball OS</title>
+    <title>BasketLeague Pro 8.0.0 — Basketball OS</title>
     <!-- Premium Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./styles.css?v=7.1.0" />
+    <link rel="stylesheet" href="./styles.css?v=8.0.0" />
   </head>
   <body class="site-locked">
     <section id="entry-gate" class="entry-gate" aria-labelledby="entry-gate-title">
@@ -420,6 +420,21 @@
           <ul id="messages" class="message-list" aria-live="polite"></ul>
         </article>
       </section>
+
+      <section class="ai-chat-section" id="ai-chat" aria-labelledby="ai-chat-title">
+        <div class="section-heading">
+          <div><p class="section-label">Gemini AI</p><h2 id="ai-chat-title">AI Chatbot</h2><p class="muted">Ρώτησε ό,τι θέλεις — γενικές ερωτήσεις, μπάσκετ, τεχνολογία ή οτιδήποτε άλλο.</p></div>
+          <button id="ai-clear" class="ghost" type="button">🧹 Καθαρισμός</button>
+        </div>
+        <div class="panel ai-chat-panel">
+          <div id="ai-messages" class="ai-messages" aria-live="polite"><div class="ai-message ai-message-bot"><strong>BasketLeague AI</strong><span>Γεια! Ρώτησέ με ό,τι θέλεις.</span></div></div>
+          <form id="ai-chat-form" class="ai-chat-form">
+            <input id="ai-chat-input" maxlength="4000" autocomplete="off" placeholder="Γράψε την ερώτησή σου..." aria-label="Μήνυμα προς το AI" required />
+            <button class="button primary glow" type="submit">➤ Αποστολή</button>
+          </form>
+          <p id="ai-chat-status" class="muted ai-chat-status">Gemini AI • η συνομιλία μένει στον browser.</p>
+        </div>
+      </section>
     </main>
 
     <!-- LIVE MATCH SIMULATOR MODAL -->
@@ -500,8 +515,8 @@
         input.focus();
       })();
     </script>
-    <script src="./firebase-config.js?v=7.1.0"></script>
-    <script type="module" src="./script.js?v=7.1.0"></script>
+    <script src="./firebase-config.js?v=8.0.0"></script>
+    <script type="module" src="./script.js?v=8.0.0"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
