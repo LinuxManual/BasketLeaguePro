@@ -1,15 +1,24 @@
 {
-  "background_color": "#ffffff",
+  "name": "BasketLeague Pro",
+  "short_name": "BASKET PRO",
   "description": "BasketLeague Pro premium dashboard for basketball rosters, matches, scores, and team chat.",
+  "lang": "el",
   "dir": "ltr",
   "display": "standalone",
-  "name": "BASKET PRO",
+  "display_override": ["window-controls-overlay", "standalone"],
   "orientation": "any",
-  "scope": "/BasketLeaguePro/",
-  "short_name": "BASKET PRO",
-  "start_url": "/BasketLeaguePro/",
+  "scope": "./",
+  "start_url": "./",
+  "id": "./",
+  "background_color": "#0a0f1d",
   "theme_color": "#0a0f1d",
-  "id": "BASKET",
-  "iarc_rating_id": "18",
-  "prefer_related_applications": true
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "prefer_related_applications": false
 }
