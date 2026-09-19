@@ -75,3 +75,19 @@ Version 7 turns the dashboard into a lightweight basketball operations system.
 ## Live AI deployment
 
 The public AI chatbot uses the server-side `api/ai-chat.js` endpoint when deployed on Vercel. Configure `GEMINI_API_KEY` and optionally `GEMINI_MODEL` as Vercel environment variables; never place the key in browser code or Git. GitHub Pages cannot execute this API route, so the AI endpoint must be deployed on a Node/serverless host.
+
+
+## Firebase AI backend
+
+The public AI chatbot now runs through Firebase Hosting + Firebase Cloud Functions.
+
+1. Set your Firebase project ID in `.firebaserc`.
+2. From the project root, install the Firebase CLI if needed.
+3. Create the Gemini secret:
+   `firebase functions:secrets:set GEMINI_API_KEY --project YOUR_PROJECT_ID`
+4. Deploy Hosting and Functions:
+   `firebase deploy --only functions,hosting --project YOUR_PROJECT_ID`
+
+The Gemini key is never stored in the browser or committed to GitHub. Firebase Secret Manager supplies it only to the `aiChat` function.
+
+The Hosting rewrite maps `/api/ai-chat` to the `aiChat` function in `europe-west1`.
