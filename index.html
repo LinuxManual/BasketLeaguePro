@@ -517,9 +517,27 @@
         input.focus();
       })();
     </script>
-    <script src="./firebase-config.js?v=11.0.0"></script>
-    <script src="./ai-config.js?v=11.0.0"></script>
-    <script type="module" src="./script.js?v=11.0.0"></script>
+    <script src="./firebase-config.js?v=12.0.0"></script>
+    <script>
+window.addEventListener("error", function(e) {
+  const msg = "BasketLeague JS error: " + (e.error && e.error.stack ? e.error.stack : (e.message || "unknown error"));
+  console.error(msg);
+  let box = document.getElementById("basket-js-error");
+  if (!box) { box = document.createElement("pre"); box.id = "basket-js-error"; document.body.appendChild(box); }
+  box.textContent = msg;
+  box.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:999999;background:#8b0000;color:#fff;padding:14px;border-radius:10px;font:12px/1.4 monospace;white-space:pre-wrap;max-height:40vh;overflow:auto";
+});
+window.addEventListener("unhandledrejection", function(e) {
+  const msg = "BasketLeague promise error: " + (e.reason && e.reason.stack ? e.reason.stack : String(e.reason || "unknown error"));
+  console.error(msg);
+  let box = document.getElementById("basket-js-error");
+  if (!box) { box = document.createElement("pre"); box.id = "basket-js-error"; document.body.appendChild(box); }
+  box.textContent = msg;
+  box.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:999999;background:#8b0000;color:#fff;padding:14px;border-radius:10px;font:12px/1.4 monospace;white-space:pre-wrap;max-height:40vh;overflow:auto";
+});
+</script>
+    <script src="./ai-config.js?v=12.0.0"></script>
+    <script type="module" src="./script.js?v=12.0.0"></script>
     <script>
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.getRegistrations().then((registrations) => {
