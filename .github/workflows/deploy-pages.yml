@@ -36,7 +36,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           mkdir -p _site/data
-          cp 404.html index.html script.js styles.css _site/
+          cp 404.html index.html script.js styles.css manifest.json sw.js icon.svg _site/
           cp data/store.json _site/data/
           node <<'NODE'
           const fs = require("fs");
