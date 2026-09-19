@@ -438,72 +438,6 @@
       </section>
     </main>
 
-    <script>
-      (() => {
-        const form = document.getElementById("ai-chat-form");
-        const input = document.getElementById("ai-chat-input");
-        const messages = document.getElementById("ai-messages");
-        const status = document.getElementById("ai-chat-status");
-        const button = document.getElementById("ai-send-btn");
-        if (!form || !input || !messages || !status || !button) return;
-
-        const history = [];
-        const endpoint = location.hostname.endsWith("github.io")
-          ? "https://europe-west1-basket-clash-7901c.cloudfunctions.net/aiChat"
-          : "/api/ai-chat";
-
-        const addMessage = (role, text) => {
-          const item = document.createElement("div");
-          item.className = "ai-message " + (role === "user" ? "ai-message-user" : "ai-message-bot");
-          const title = document.createElement("strong");
-          title.textContent = role === "user" ? "Εσύ" : "BasketLeague AI";
-          const body = document.createElement("span");
-          body.textContent = text;
-          item.append(title, body);
-          messages.appendChild(item);
-          messages.scrollTop = messages.scrollHeight;
-        };
-
-        form.addEventListener("submit", async (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          const text = input.value.trim();
-          if (!text || button.disabled) return;
-
-          history.push({ role: "user", text });
-          addMessage("user", text);
-          input.value = "";
-          input.disabled = true;
-          button.disabled = true;
-          button.textContent = "⏳ Αποστολή...";
-          status.textContent = "Το AI γράφει…";
-
-          try {
-            const response = await fetch(endpoint, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ messages: history.slice(-12) })
-            });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(data.error || ("Firebase error " + response.status));
-            const answer = String(data.text || "").trim();
-            if (!answer) throw new Error("Το AI δεν επέστρεψε απάντηση.");
-            history.push({ role: "assistant", text: answer });
-            addMessage("assistant", answer);
-            status.textContent = "Gemini AI • έτοιμο";
-          } catch (error) {
-            history.pop();
-            addMessage("assistant", "⚠️ " + error.message);
-            status.textContent = "Σφάλμα σύνδεσης με το AI";
-          } finally {
-            input.disabled = false;
-            button.disabled = false;
-            button.textContent = "➤ Αποστολή";
-            input.focus();
-          }
-        });
-      })();
-    </script>
 
     <!-- LIVE MATCH SIMULATOR MODAL -->
     <div id="simulator-modal" class="modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="sim-title">
@@ -584,7 +518,8 @@
       })();
     </script>
     <script src="./firebase-config.js?v=9.0.0"></script>
-    <script type="module" src="./script.js?v=9.0.0"></script>
+    <script src="./ai-config.js?v=10.0.0"></script>
+    <script type="module" src="./script.js?v=10.0.0"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
