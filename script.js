@@ -575,8 +575,8 @@ function getFilteredMatches() {
 }
 
 function renderMatchOptions() {
-  const openMatches = state.matches.filter((match) => !isCompleted(match));
-  const options = openMatches.length ? openMatches : state.matches;
+  const openMatches = state.matches.filter((match) => isTeamMatch(match) && !isCompleted(match));
+  const options = openMatches.length ? openMatches : state.matches.filter(isTeamMatch);
   if (!options.length) {
     els.matchId.replaceChildren(createNode("option", { text: "Δεν υπάρχει αγώνας", attrs: { value: "" } }));
     return;
@@ -699,7 +699,6 @@ function render() {
   renderOneVOneMatches();
   renderMessages();
   renderCommandCenter();
-  renderIntelligence();
   applySearchFilter();
 }
 
