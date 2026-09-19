@@ -47,7 +47,7 @@ exports.aiChat = onRequest(
       }
 
       const upstream = await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
         {
           method: "POST",
           headers: {
@@ -63,7 +63,7 @@ exports.aiChat = onRequest(
             contents,
             generationConfig: {
               maxOutputTokens: 1200,
-              temperature: 0.7
+              thinkingConfig: { thinkingLevel: "medium" }
             }
           })
         }
