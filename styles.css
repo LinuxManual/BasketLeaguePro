@@ -1864,3 +1864,98 @@ input,select,textarea{ min-height:46px; }
   .hero-copy h1{ font-size:1.75rem; }
 }
 
+/* MOBILE REBUILD v16 — compact app-like phone layout */
+@media (max-width:768px){
+  body{font-size:15px;background:#050811}
+  .topbar{
+    position:sticky;top:6px;
+    width:calc(100% - 12px);margin:6px auto 0;
+    padding:9px 10px;border-radius:16px;
+    display:grid;grid-template-columns:1fr auto;gap:8px;
+  }
+  .brand{gap:9px}
+  .brand-mark{width:36px;height:36px;border-radius:10px}
+  .title-main{font-size:.92rem}.title-sub{font-size:.52rem}
+  .topbar .icon-button{width:40px;height:40px}
+  nav.mobile-nav{
+    grid-column:1/-1;
+    order:3;width:100%;
+    display:flex;gap:4px;overflow-x:auto;
+    justify-content:flex-start;
+    padding:2px;
+    scrollbar-width:none;
+  }
+  nav.mobile-nav::-webkit-scrollbar{display:none}
+  nav.mobile-nav a{
+    flex:1 0 auto;min-width:78px;
+    min-height:40px;padding:8px 9px;
+    font-size:.68rem;border-radius:9px;
+    justify-content:center;background:rgba(255,255,255,.035);
+    border:1px solid rgba(255,255,255,.05);
+  }
+  main{width:calc(100% - 12px);padding:12px 0 48px}
+  .hero{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+  .hero-copy{padding:20px 16px;border-radius:16px;order:1}
+  .kicker{font-size:.64rem;margin-bottom:7px}
+  h1{font-size:clamp(1.7rem,8.5vw,2.25rem);margin-bottom:9px}
+  .hero-text{font-size:.82rem;line-height:1.45;margin-bottom:15px}
+  .hero-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .hero-actions .button{min-height:44px;padding:9px 6px;font-size:.73rem}
+  .court-visual{order:2;min-height:145px;border-radius:16px}
+  .metrics-grid{order:3;grid-template-columns:repeat(2,1fr);gap:7px}
+  .metric{padding:10px;border-radius:12px}
+  .metric b{font-size:1.15rem}.metric span{font-size:.6rem}
+  .workspace-grid,.workspace-grid.compact{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+  .panel{padding:13px;border-radius:15px}
+  .panel-heading{margin-bottom:10px}
+  .panel-heading,.section-heading{flex-direction:row;align-items:center}
+  .section-label{font-size:.59rem}
+  h2{font-size:1rem}
+  .roster-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .team-column{padding:9px;border-radius:11px}
+  .team-heading h3{font-size:.78rem}
+  .player-row{padding:8px;font-size:.74rem}
+  .form-row,.form-row-three,.score-fields{grid-template-columns:1fr 1fr;gap:7px}
+  .form-row-three .span-two{grid-column:1/-1}
+  .form-group{gap:4px}.form-group label{font-size:.67rem}
+  input,select,textarea{min-height:43px;padding:9px 10px;font-size:.8rem;border-radius:9px}
+  .button-submit{min-height:44px;padding:9px;font-size:.78rem}
+  .action-panel{order:3}
+  .command-center{margin-bottom:14px}
+  .control-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+  .control-actions .ghost{min-height:40px;padding:7px 3px;font-size:.65rem}
+  .analytics-grid{grid-template-columns:1fr 1fr;gap:7px}
+  .analytics-grid .chart-card{grid-column:1/-1}
+  .next-match-value{font-size:1rem}.countdown{font-size:1.2rem}
+  .tool-grid{grid-template-columns:1fr;gap:7px}
+  .schedule-section{margin-bottom:14px}
+  .section-heading{gap:7px}
+  .segmented{padding:3px;border-radius:9px}
+  .segmented button{min-height:36px;padding:6px 7px;font-size:.62rem}
+  .table-wrap{margin:0 -3px;border-radius:9px}
+  table{min-width:590px}
+  th,td{padding:9px 8px;font-size:.68rem}
+  .workspace-grid.compact .score-panel,.workspace-grid.compact .chat-panel{width:100%}
+  .chat-actions{flex-direction:row;align-items:center}
+  .quick-emojis{flex:1}
+  .emoji-btn{min-height:40px}
+  .send-btn{width:auto;min-width:90px;min-height:40px;padding:8px}
+  .ai-chat-section{margin:14px 0 28px}
+  .ai-chat-section .section-heading{align-items:flex-start}
+  .ai-chat-section .section-heading>button{width:auto;min-height:40px}
+  .ai-messages{min-height:220px;max-height:48vh;padding:10px}
+  .ai-message{max-width:91%;font-size:.82rem;padding:9px 10px}
+  .ai-chat-form{grid-template-columns:1fr auto;padding:8px;gap:6px}
+  .ai-chat-form input{min-height:46px}
+  .ai-chat-form .button{min-height:46px;padding:8px 11px;font-size:.72rem}
+  .modal-card{padding:15px 12px}
+}
+@media(max-width:430px){
+  .analytics-grid{grid-template-columns:1fr}
+  .analytics-grid .chart-card{grid-column:auto}
+  .hero-actions{grid-template-columns:1fr}
+  .roster-grid{grid-template-columns:1fr 1fr}
+  .control-actions{grid-template-columns:1fr 1fr 1fr}
+  .control-actions .ghost{font-size:.59rem}
+}
+
