@@ -70,7 +70,8 @@ function loadStore() {
       [TEAM_FLY]: normalizeRoster([...(rosters[TEAM_FLY] || []), ...(rosters[LEGACY_TEAM_FLY] || [])])
     },
     matches: Array.isArray(parsed?.matches) ? parsed.matches : [],
-    messages: Array.isArray(parsed?.messages) ? parsed.messages : []
+    messages: Array.isArray(parsed?.messages) ? parsed.messages : [],
+    playerStats: Array.isArray(parsed?.playerStats) ? parsed.playerStats : []
   };
 }
 
@@ -139,6 +140,19 @@ function readBody(req) {
 function createId() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function normalizePlayerStat(item) {
+  if (!item || !item.matchId || !item.player) return null;
+  const int = (v) => Math.max(0, Math.min(99, Number.parseInt(v, 10) || 0));
+  return {
+    id: String(item.id || createId()),
+    matchId: String(item.matchId),
+    team: TEAMS.includes(item.team) ? item.team : TEAM_HOT,
+    player: normalizeText(item.player, MAX_NAME_LENGTH),
+    points: int(item.points), rebounds: int(item.rebounds), assists: int(item.assists),
+    steals: int(item.steals), blocks: int(item.blocks), turnovers: int(item.turnovers)
+  };
 }
 
 function scoreIsValid(value) {
@@ -290,6 +304,25 @@ async function handleScores(req, res) {
   }
 }
 
+async function handleStats(req, res) {
+  try {
+    if (req.method !== "POST") return sendJson(res, 405, { error: "Method not allowed" });
+    const body = await readBody(req);
+    const stat = normalizePlayerStat(body);
+    if (!stat) return sendJson(res, 400, { error: "Invalid player stat payload" });
+    const store = loadStore();
+    const match = store.matches.find(m => m.id === stat.matchId);
+    if (!match) return sendJson(res, 404, { error: "Match not found" });
+    if (!store.rosters[stat.team].some(p => p.name.toLocaleLowerCase("el-GR") === stat.player.toLocaleLowerCase("el-GR"))) {
+      return sendJson(res, 404, { error: "Player not found in roster" });
+    }
+    const idx = store.playerStats.findIndex(s => s.matchId === stat.matchId && s.team === stat.team && s.player.toLocaleLowerCase("el-GR") === stat.player.toLocaleLowerCase("el-GR"));
+    if (idx >= 0) store.playerStats[idx] = stat; else store.playerStats.push(stat);
+    saveStore(store);
+    return sendJson(res, 200, store);
+  } catch (error) { return sendJson(res, 400, { error: error.message }); }
+}
+
 async function handleChat(req, res) {
   try {
     const store = loadStore();
@@ -332,9 +365,10 @@ const server = http.createServer(async (req, res) => {
   if (pathname === "/api/players") return handlePlayers(req, res);
   if (pathname === "/api/matches") return handleMatches(req, res);
   if (pathname === "/api/scores" && req.method === "POST") return handleScores(req, res);
+  if (pathname === "/api/stats" && req.method === "POST") return handleStats(req, res);
   if (pathname === "/api/chat" && ["POST", "DELETE"].includes(req.method)) return handleChat(req, res);
   if (pathname === "/api/health" && req.method === "GET") {
-    return sendJson(res, 200, { ok: true, version: "5.0.0", uptime: process.uptime() });
+    return sendJson(res, 200, { ok: true, version: "7.0.0", uptime: process.uptime() });
   }
 
   if (pathname.startsWith("/api/")) {

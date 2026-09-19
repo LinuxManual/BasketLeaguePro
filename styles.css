@@ -1362,3 +1362,17 @@ body:not(.site-locked) .entry-gate { display: none; }
 .light-theme .topbar{background:rgba(255,255,255,.8)}
 .light-theme input,.light-theme select,.light-theme textarea{color:#172033;background:rgba(255,255,255,.7)}
 @media(max-width:900px){.analytics-grid{grid-template-columns:1fr}.tool-grid{grid-template-columns:1fr}.control-actions{justify-content:flex-start}}
+
+/* V7 Basketball OS */
+.intelligence-section{margin-bottom:28px}
+.intelligence-grid{display:grid;grid-template-columns:1.4fr .9fr;gap:14px}
+.stat-input-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat-input-grid label{display:grid;gap:5px;font-size:.72rem;font-weight:800;color:var(--muted);letter-spacing:.04em}
+.stat-input-grid input{width:100%}
+.intelligence-section .panel{min-width:0}
+.intelligence-section .table-wrap{max-height:430px;overflow:auto}
+.intelligence-section table{min-width:620px}
+.intelligence-section tbody tr{transition:background .2s,transform .2s}
+.intelligence-section tbody tr:hover{background:rgba(255,255,255,.04);transform:translateX(2px)}
+@media(max-width:1000px){.intelligence-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.stat-input-grid{grid-template-columns:repeat(2,1fr)}}

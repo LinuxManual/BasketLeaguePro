@@ -1,4 +1,4 @@
-# BasketLeaguePro v6
+# BasketLeaguePro v7
 
 BasketLeaguePro is a premium, local-first basketball league dashboard for managing rosters, fixtures, score entry, standings, and team chat, complete with a live-action match simulator.
 
@@ -51,3 +51,23 @@ When Firebase is configured on the Node host, roster, match, score, and chat upd
 ## Deployment Note
 
 If UI updates do not appear after deploy, hard refresh the page or clear cache once. Static assets are cache-busted using version query strings in `index.html` (for `styles.css` and `script.js`).
+
+
+## V7 — Basketball OS
+
+Version 7 turns the dashboard into a lightweight basketball operations system.
+
+### Player Intelligence
+- Per-game player box scores: points, rebounds, assists, steals, blocks and turnovers.
+- Persistent player-stat records stored alongside league state.
+- Automatic Player Impact leaderboard with an efficiency-style impact calculation.
+- Team-aware player selection and match selection.
+
+### Operations & UX
+- Command Center with next tip-off, countdown, form and scoring trend.
+- Global search, JSON backup export and browser notifications.
+- Light/dark theme.
+- Responsive Basketball OS layout.
+- Service-worker cache versioned for the v7 assets.
+
+The architecture remains local-first and Firebase-compatible, so the new player analytics data participates in the same state synchronization model.

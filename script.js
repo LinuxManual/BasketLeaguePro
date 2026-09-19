@@ -65,6 +65,43 @@ function teamForm(team) {
   });
 }
 
+function playerLeaderboard() {
+  const totals = new Map();
+  state.playerStats.forEach(s => {
+    const key = `${s.team}::${s.player}`;
+    const cur = totals.get(key) || {team:s.team,player:s.player,gp:0,points:0,rebounds:0,assists:0,steals:0,blocks:0,turnovers:0};
+    cur.gp += 1; cur.points += s.points; cur.rebounds += s.rebounds; cur.assists += s.assists; cur.steals += s.steals; cur.blocks += s.blocks; cur.turnovers += s.turnovers;
+    totals.set(key,cur);
+  });
+  return [...totals.values()].map(p=>({...p,eff:p.points+p.rebounds+p.assists+p.steals+p.blocks-p.turnovers})).sort((a,b)=>b.eff-a.eff);
+}
+
+function renderIntelligence() {
+  const body=document.getElementById("leaderboard-body");
+  if(!body) return;
+  const rows=playerLeaderboard().slice(0,10);
+  body.replaceChildren(...(rows.length ? rows.map(p=>createNode("tr",{},[
+    createNode("td",{text:p.player,className:"team-cell-bold"}),
+    createNode("td",{text:p.team}),
+    createNode("td",{text:String(p.gp)}),
+    createNode("td",{text:String(p.points)}),
+    createNode("td",{text:String(p.rebounds)}),
+    createNode("td",{text:String(p.assists)}),
+    createNode("td",{text:String(p.eff),className:"score-cell"})
+  ])) : [createNode("tr",{},[createNode("td",{text:"Δεν υπάρχουν player stats ακόμα.",className:"empty-state",attrs:{colspan:"7"}})])]));
+  const matchSelect=document.getElementById("stat-match");
+  if(matchSelect){
+    const matches=state.matches;
+    matchSelect.replaceChildren(...(matches.length?matches.map(m=>createNode("option",{text:`${formatDate(m.date)} • ${m.time} • ${m.court}`,attrs:{value:m.id}})):[createNode("option",{text:"Δεν υπάρχει αγώνας",attrs:{value:""}})]));
+  }
+  const playerSelect=document.getElementById("stat-player");
+  const teamSelect=document.getElementById("stat-team");
+  if(playerSelect && teamSelect){
+    const team=teamSelect.value;
+    playerSelect.replaceChildren(...state.rosters[team].map(p=>createNode("option",{text:`${p.name} (#${p.number})`,attrs:{value:p.name}})));
+  }
+}
+
 function renderCommandCenter() {
   const next = state.matches.filter(m => !isCompleted(m)).sort((a,b)=>new Date(`${a.date}T${a.time}`)-new Date(`${b.date}T${b.time}`))[0];
   const nextEl = document.getElementById("next-match");
@@ -149,7 +186,8 @@ function normalizeState(next = {}) {
       [TEAM_FLY]: (Array.isArray(flyRoster) ? flyRoster : []).map(mapPlayer).filter(Boolean)
     },
     matches: Array.isArray(next.matches) ? next.matches : [],
-    messages: Array.isArray(next.messages) ? next.messages : []
+    messages: Array.isArray(next.messages) ? next.messages : [],
+    playerStats: Array.isArray(next.playerStats) ? next.playerStats.map(normalizePlayerStat).filter(Boolean) : []
   };
 }
 
@@ -256,6 +294,23 @@ function createId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function normalizePlayerStat(item) {
+  if (!item || !item.matchId || !item.player) return null;
+  const int = (v) => Math.max(0, Math.min(99, Number.parseInt(v, 10) || 0));
+  return {
+    id: String(item.id || createId()),
+    matchId: String(item.matchId),
+    team: TEAMS.includes(item.team) ? item.team : TEAM_HOT,
+    player: normalizeText(item.player, 80),
+    points: int(item.points),
+    rebounds: int(item.rebounds),
+    assists: int(item.assists),
+    steals: int(item.steals),
+    blocks: int(item.blocks),
+    turnovers: int(item.turnovers)
+  };
+}
+
 function normalizeText(value, maxLength) {
   return String(value || "").trim().replace(/\s+/g, " ").slice(0, maxLength);
 }
@@ -331,6 +386,16 @@ function localApi(path, options = {}) {
     return Promise.resolve(writeLocalStore(store));
   }
 
+  if (path === "stats" && method === "POST") {
+    const stat = normalizePlayerStat(body);
+    if (!stat || !store.matches.some(m => m.id === stat.matchId)) throw new Error("Invalid player stat payload");
+    const roster = store.rosters[stat.team] || [];
+    if (!roster.some(p => p.name.toLocaleLowerCase("el-GR") === stat.player.toLocaleLowerCase("el-GR"))) throw new Error("Player not found in roster");
+    const idx = store.playerStats.findIndex(s => s.matchId === stat.matchId && s.team === stat.team && s.player.toLocaleLowerCase("el-GR") === stat.player.toLocaleLowerCase("el-GR"));
+    if (idx >= 0) store.playerStats[idx] = stat; else store.playerStats.push(stat);
+    return Promise.resolve(writeLocalStore(store));
+  }
+
   if (path === "chat" && method === "POST") {
     const user = normalizeText(body.user, 80);
     const text = normalizeText(body.text, 500);
@@ -345,7 +410,7 @@ function localApi(path, options = {}) {
     return Promise.resolve(writeLocalStore(store));
   }
 
-  if (path === "health" && method === "GET") return Promise.resolve({ ok: true, version: "5.0.0", mode: "static" });
+  if (path === "health" && method === "GET") return Promise.resolve({ ok: true, version: "7.0.0", mode: "static" });
   throw new Error("Method or endpoint not allowed");
 }
 
@@ -651,6 +716,7 @@ function render() {
   renderMatches();
   renderMessages();
   renderCommandCenter();
+  renderIntelligence();
   applySearchFilter();
 }
 
@@ -1035,7 +1101,27 @@ function applySearchFilter(){
   document.querySelectorAll("#matches-body tr").forEach(el=>el.hidden=!!q && !el.textContent.toLocaleLowerCase("el-GR").includes(q));
   document.querySelectorAll("#messages > li").forEach(el=>el.hidden=!!q && !el.textContent.toLocaleLowerCase("el-GR").includes(q));
 }
-document.getElementById("export-data")?.addEventListener("click", exportState);
+document.getElementById("export-data")?.addEventListener("click", exportState);\ndocument.getElementById("stat-team")?.addEventListener("change",()=>renderIntelligence());
+document.getElementById("stats-form")?.addEventListener("submit",async e=>{
+  e.preventDefault();
+  const form=e.currentTarget;
+  setBusy(form,true);
+  try {
+    state=normalizeState(await api("stats",{method:"POST",body:JSON.stringify({
+      matchId:document.getElementById("stat-match").value,
+      team:document.getElementById("stat-team").value,
+      player:document.getElementById("stat-player").value,
+      points:document.getElementById("stat-points").value,
+      rebounds:document.getElementById("stat-rebounds").value,
+      assists:document.getElementById("stat-assists").value,
+      steals:document.getElementById("stat-steals").value,
+      blocks:document.getElementById("stat-blocks").value,
+      turnovers:document.getElementById("stat-turnovers").value
+    })}));
+    render(); form.reset(); renderIntelligence(); showToast("Τα player stats αποθηκεύτηκαν.");
+  } catch(err){showToast(err.message)} finally{setBusy(form,false)}
+});
+
 document.getElementById("theme-toggle")?.addEventListener("click",()=>document.body.classList.toggle("light-theme"));
 document.getElementById("global-search")?.addEventListener("input",e=>{searchQuery=e.target.value;applySearchFilter();});
 document.getElementById("focus-next")?.addEventListener("click",()=>document.getElementById("matches")?.scrollIntoView({behavior:"smooth",block:"start"}));
