@@ -1,16 +1,16 @@
-# BasketLeaguePro v5
+# BasketLeaguePro v6
 
 BasketLeaguePro is a premium, local-first basketball league dashboard for managing rosters, fixtures, score entry, standings, and team chat, complete with a live-action match simulator.
 
-## What's new in v5
+## What's new in v6
 
-- **Premium Glassmorphic Theme**: Rebuilt the interface with custom HSL tailored colors, dark mode, blurred backgrounds, dynamic glowing effects, and smooth micro-animations.
+- **Command Center Analytics**: next tip-off countdown, recent form, scoring trend, global search, notifications and export backup.\n- **Light/Dark UI**: instant theme toggle for the dashboard.\n- **Premium Glassmorphic Theme**: Rebuilt the interface with custom HSL tailored colors, dark mode, blurred backgrounds, dynamic glowing effects, and smooth micro-animations.
 - **Live Match Simulator**: Added an interactive modal simulator allowing users to simulate matches period-by-period with live ticker feed commentary, automatic play-by-play events, and instant score updates.
 - **Roster Attributes**: Extended the player roster system with Jersey Numbers and Positions (PG, SG, SF, PF, C).
 - **Online sync on GitHub Pages**: Uses Cloud Firestore for shared, real-time state across visitors; `localStorage` remains an offline fallback.
 - **Entry gate**: The dashboard displays the existing access-code prompt before opening.
 
-## Firebase configuration
+## Upgrade highlights\n\nThe v6 branch keeps the existing local-first + Firestore architecture and adds a presentation/analytics layer without requiring a framework migration. The new Command Center is computed from the existing match state, so it works offline too.\n\n## Firebase configuration
 
 Firebase's web configuration is loaded from runtime configuration instead of being embedded in tracked browser JavaScript. Create a local `.env` from `.env.example`, set the variables with the Firebase project values, and export them before starting the server. In production, set the same variables through the host's secret/environment-variable settings.
 
