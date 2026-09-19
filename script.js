@@ -20,6 +20,7 @@ const els = {
   hotCount: document.getElementById("hot-count"),
   flyCount: document.getElementById("fly-count"),
   matchesBody: document.getElementById("matches-body"),
+  oneVOneMatchesBody: document.getElementById("one-v-one-matches-body"),
   matchId: document.getElementById("match-id"),
   messages: document.getElementById("messages"),
   toast: document.getElementById("toast"),
@@ -54,7 +55,7 @@ let countdownTimer = null;
 let searchQuery = "";
 
 function completedResults() {
-  return state.matches.filter(isCompleted);
+  return state.matches.filter(m => isTeamMatch(m) && isCompleted(m));
 }
 
 function teamForm(team) {
@@ -65,45 +66,8 @@ function teamForm(team) {
   });
 }
 
-function playerLeaderboard() {
-  const totals = new Map();
-  state.playerStats.forEach(s => {
-    const key = `${s.team}::${s.player}`;
-    const cur = totals.get(key) || {team:s.team,player:s.player,gp:0,points:0,rebounds:0,assists:0,steals:0,blocks:0,turnovers:0};
-    cur.gp += 1; cur.points += s.points; cur.rebounds += s.rebounds; cur.assists += s.assists; cur.steals += s.steals; cur.blocks += s.blocks; cur.turnovers += s.turnovers;
-    totals.set(key,cur);
-  });
-  return [...totals.values()].map(p=>({...p,eff:p.points+p.rebounds+p.assists+p.steals+p.blocks-p.turnovers})).sort((a,b)=>b.eff-a.eff);
-}
-
-function renderIntelligence() {
-  const body=document.getElementById("leaderboard-body");
-  if(!body) return;
-  const rows=playerLeaderboard().slice(0,10);
-  body.replaceChildren(...(rows.length ? rows.map(p=>createNode("tr",{},[
-    createNode("td",{text:p.player,className:"team-cell-bold"}),
-    createNode("td",{text:p.team}),
-    createNode("td",{text:String(p.gp)}),
-    createNode("td",{text:String(p.points)}),
-    createNode("td",{text:String(p.rebounds)}),
-    createNode("td",{text:String(p.assists)}),
-    createNode("td",{text:String(p.eff),className:"score-cell"})
-  ])) : [createNode("tr",{},[createNode("td",{text:"Δεν υπάρχουν player stats ακόμα.",className:"empty-state",attrs:{colspan:"7"}})])]));
-  const matchSelect=document.getElementById("stat-match");
-  if(matchSelect){
-    const matches=state.matches;
-    matchSelect.replaceChildren(...(matches.length?matches.map(m=>createNode("option",{text:`${formatDate(m.date)} • ${m.time} • ${m.court}`,attrs:{value:m.id}})):[createNode("option",{text:"Δεν υπάρχει αγώνας",attrs:{value:""}})]));
-  }
-  const playerSelect=document.getElementById("stat-player");
-  const teamSelect=document.getElementById("stat-team");
-  if(playerSelect && teamSelect){
-    const team=teamSelect.value;
-    playerSelect.replaceChildren(...state.rosters[team].map(p=>createNode("option",{text:`${p.name} (#${p.number})`,attrs:{value:p.name}})));
-  }
-}
-
 function renderCommandCenter() {
-  const next = state.matches.filter(m => !isCompleted(m)).sort((a,b)=>new Date(`${a.date}T${a.time}`)-new Date(`${b.date}T${b.time}`))[0];
+  const next = state.matches.filter(m => isTeamMatch(m) && !isCompleted(m)).sort((a,b)=>new Date(`${a.date}T${a.time}`)-new Date(`${b.date}T${b.time}`))[0];
   const nextEl = document.getElementById("next-match");
   const metaEl = document.getElementById("next-match-meta");
   if (next) {
@@ -187,7 +151,7 @@ function normalizeState(next = {}) {
     },
     matches: Array.isArray(next.matches) ? next.matches : [],
     messages: Array.isArray(next.messages) ? next.messages : [],
-    playerStats: Array.isArray(next.playerStats) ? next.playerStats.map(normalizePlayerStat).filter(Boolean) : []
+    
   };
 }
 
@@ -294,23 +258,6 @@ function createId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function normalizePlayerStat(item) {
-  if (!item || !item.matchId || !item.player) return null;
-  const int = (v) => Math.max(0, Math.min(99, Number.parseInt(v, 10) || 0));
-  return {
-    id: String(item.id || createId()),
-    matchId: String(item.matchId),
-    team: TEAMS.includes(item.team) ? item.team : TEAM_HOT,
-    player: normalizeText(item.player, 80),
-    points: int(item.points),
-    rebounds: int(item.rebounds),
-    assists: int(item.assists),
-    steals: int(item.steals),
-    blocks: int(item.blocks),
-    turnovers: int(item.turnovers)
-  };
-}
-
 function normalizeText(value, maxLength) {
   return String(value || "").trim().replace(/\s+/g, " ").slice(0, maxLength);
 }
@@ -346,7 +293,7 @@ function localApi(path, options = {}) {
     const time = normalizeText(body.time, 5);
     const court = normalizeText(body.court, 80);
     if (!date || !time || !court) throw new Error("Invalid match payload");
-    store.matches.push({ id: createId(), date, time, court, hotScore: null, flyScore: null });
+    store.matches.push({ id: createId(), type: "team", date, time, court, hotScore: null, flyScore: null });
     store.matches.sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
     
     // Auto-post system log
@@ -356,6 +303,27 @@ function localApi(path, options = {}) {
       createdAt: Date.now()
     });
     
+    return Promise.resolve(writeLocalStore(store));
+  }
+
+  if (path === "one-v-one" && method === "POST") {
+    const date = normalizeText(body.date, 10);
+    const time = normalizeText(body.time, 5);
+    const court = normalizeText(body.court, 80);
+    const playerA = normalizeText(body.playerA, 80);
+    const playerB = normalizeText(body.playerB, 80);
+    if (!date || !time || !court || !playerA || !playerB || playerA.toLocaleLowerCase("el-GR") === playerB.toLocaleLowerCase("el-GR")) throw new Error("Συμπλήρωσε δύο διαφορετικούς παίκτες.");
+    store.matches.push({ id: createId(), type: "1v1", date, time, court, playerA, playerB, scoreA: null, scoreB: null });
+    store.matches.sort((a,b) => new Date(a.date+"T"+a.time)-new Date(b.date+"T"+b.time));
+    return Promise.resolve(writeLocalStore(store));
+  }
+
+  if (path === "one-v-one-score" && method === "POST") {
+    const matchId = String(body.matchId || "");
+    const scoreA = Number.parseInt(body.scoreA, 10), scoreB = Number.parseInt(body.scoreB, 10);
+    const match = store.matches.find(item => item.id === matchId && item.type === "1v1");
+    if (!match || Number.isNaN(scoreA) || Number.isNaN(scoreB) || scoreA < 0 || scoreB < 0 || scoreA > 300 || scoreB > 300) throw new Error("Invalid 1v1 score payload");
+    match.scoreA = scoreA; match.scoreB = scoreB;
     return Promise.resolve(writeLocalStore(store));
   }
 
@@ -386,16 +354,6 @@ function localApi(path, options = {}) {
     return Promise.resolve(writeLocalStore(store));
   }
 
-  if (path === "stats" && method === "POST") {
-    const stat = normalizePlayerStat(body);
-    if (!stat || !store.matches.some(m => m.id === stat.matchId)) throw new Error("Invalid player stat payload");
-    const roster = store.rosters[stat.team] || [];
-    if (!roster.some(p => p.name.toLocaleLowerCase("el-GR") === stat.player.toLocaleLowerCase("el-GR"))) throw new Error("Player not found in roster");
-    const idx = store.playerStats.findIndex(s => s.matchId === stat.matchId && s.team === stat.team && s.player.toLocaleLowerCase("el-GR") === stat.player.toLocaleLowerCase("el-GR"));
-    if (idx >= 0) store.playerStats[idx] = stat; else store.playerStats.push(stat);
-    return Promise.resolve(writeLocalStore(store));
-  }
-
   if (path === "chat" && method === "POST") {
     const user = normalizeText(body.user, 80);
     const text = normalizeText(body.text, 500);
@@ -410,7 +368,7 @@ function localApi(path, options = {}) {
     return Promise.resolve(writeLocalStore(store));
   }
 
-  if (path === "health" && method === "GET") return Promise.resolve({ ok: true, version: "7.0.0", mode: "static" });
+  if (path === "health" && method === "GET") return Promise.resolve({ ok: true, version: "7.1.0", mode: "static" });
   throw new Error("Method or endpoint not allowed");
 }
 
@@ -428,9 +386,17 @@ function createNode(tag, options = {}, children = []) {
   return node;
 }
 
-function isCompleted(match) {
-  return Number.isInteger(match.hotScore) && Number.isInteger(match.flyScore);
+function normalizeMatch(match) {
+  if (!match || !match.id || !match.date || !match.time || !match.court) return null;
+  if (match.type === "1v1") return { ...match, type: "1v1", playerA: normalizeText(match.playerA,80), playerB: normalizeText(match.playerB,80), scoreA: Number.isInteger(match.scoreA) ? match.scoreA : null, scoreB: Number.isInteger(match.scoreB) ? match.scoreB : null };
+  return { ...match, type: "team", hotScore: Number.isInteger(match.hotScore) ? match.hotScore : null, flyScore: Number.isInteger(match.flyScore) ? match.flyScore : null };
 }
+
+function isCompleted(match) {
+  return match.type === "1v1" ? Number.isInteger(match.scoreA) && Number.isInteger(match.scoreB) : Number.isInteger(match.hotScore) && Number.isInteger(match.flyScore);
+}
+function isTeamMatch(match) { return match.type !== "1v1"; }
+function isOneVOne(match) { return match.type === "1v1"; }
 
 function formatDate(value) {
   if (!value) return "-";
@@ -493,7 +459,7 @@ function buildStandings(matches) {
     ])
   );
 
-  matches.filter(isCompleted).forEach((match) => {
+  matches.filter(m => isTeamMatch(m) && isCompleted(m)).forEach((match) => {
     const hotWon = match.hotScore > match.flyScore;
     const flyWon = match.flyScore > match.hotScore;
     table[TEAM_HOT].played += 1;
@@ -514,15 +480,15 @@ function buildStandings(matches) {
 }
 
 function renderMetrics() {
-  const completed = state.matches.filter(isCompleted);
-  const upcoming = state.matches.length - completed.length;
+  const completed = state.matches.filter(m => isTeamMatch(m) && isCompleted(m));
+  const upcoming = state.matches.filter(m => isTeamMatch(m) && !isCompleted(m)).length;
   const totalPlayers = TEAMS.reduce((sum, team) => sum + state.rosters[team].length, 0);
   const avgPoints = completed.length
     ? Math.round(completed.reduce((sum, match) => sum + match.hotScore + match.flyScore, 0) / completed.length)
     : 0;
 
   const metrics = [
-    ["Αγώνες", state.matches.length],
+    ["Αγώνες ομάδων", state.matches.filter(isTeamMatch).length],
     ["Τελικοί", completed.length],
     ["Επόμενοι", upcoming],
     ["Παίκτες", totalPlayers],
@@ -601,7 +567,7 @@ function renderRosters() {
 }
 
 function getFilteredMatches() {
-  return state.matches.filter((match) => {
+  return state.matches.filter((match) => isTeamMatch(match)).filter((match) => {
     if (activeFilter === "completed") return isCompleted(match);
     if (activeFilter === "upcoming") return !isCompleted(match);
     return true;
@@ -609,8 +575,8 @@ function getFilteredMatches() {
 }
 
 function renderMatchOptions() {
-  const openMatches = state.matches.filter((match) => !isCompleted(match));
-  const options = openMatches.length ? openMatches : state.matches;
+  const openMatches = state.matches.filter((match) => isTeamMatch(match) && !isCompleted(match));
+  const options = openMatches.length ? openMatches : state.matches.filter(isTeamMatch);
   if (!options.length) {
     els.matchId.replaceChildren(createNode("option", { text: "Δεν υπάρχει αγώνας", attrs: { value: "" } }));
     return;
@@ -689,6 +655,22 @@ function renderMatches() {
   renderMatchOptions();
 }
 
+function renderOneVOneMatches() {
+  if (!els.oneVOneMatchesBody) return;
+  const matches = state.matches.filter(isOneVOne);
+  if (!matches.length) { els.oneVOneMatchesBody.replaceChildren(createNode("tr",{},[createNode("td",{className:"empty-state",text:"Δεν υπάρχουν αγώνες 1v1.",attrs:{colspan:"7"}})])); return; }
+  els.oneVOneMatchesBody.replaceChildren(...matches.map(match => {
+    const completed=isCompleted(match), score=completed ? match.scoreA+"-"+match.scoreB : "-";
+    const actions=createNode("div",{className:"action-cell"});
+    if(!completed) actions.appendChild(createNode("button",{className:"button-sim-action",text:"Καταχώρηση σκορ",attrs:{type:"button","data-action":"score-1v1","data-match-id":match.id}}));
+    actions.appendChild(createNode("button",{className:"icon-button delete-match-btn",html:SVG_TRASH,attrs:{type:"button","data-action":"delete-match","data-match-id":match.id,title:"Διαγραφή 1v1"}}));
+    return createNode("tr",{},[
+      createNode("td",{text:formatDate(match.date)}),createNode("td",{text:match.time}),createNode("td",{text:match.playerA}),createNode("td",{text:match.playerB}),createNode("td",{text:score,className:"match-score-cell"}),
+      createNode("td",{},[createNode("span",{className:"status "+(completed?"completed":"upcoming"),text:completed?"Τελικός":"Επόμενος"})]),createNode("td",{},[actions])
+    ]);
+  }));
+}
+
 function renderMessages() {
   if (!state.messages.length) {
     els.messages.replaceChildren(createNode("li", { className: "empty-state", text: "Δεν υπάρχουν μηνύματα." }));
@@ -714,9 +696,9 @@ function render() {
   renderStandings();
   renderRosters();
   renderMatches();
+  renderOneVOneMatches();
   renderMessages();
   renderCommandCenter();
-  renderIntelligence();
   applySearchFilter();
 }
 
@@ -977,6 +959,13 @@ document.getElementById("match-form").addEventListener("submit", (event) => {
   );
 });
 
+document.getElementById("one-v-one-form")?.addEventListener("submit", (event) => {
+  event.preventDefault(); const form=event.currentTarget;
+  handleSubmit(form,()=>api("one-v-one",{method:"POST",body:JSON.stringify({
+    playerA:document.getElementById("one-v-one-player-a").value, playerB:document.getElementById("one-v-one-player-b").value,
+    date:document.getElementById("one-v-one-date").value, time:document.getElementById("one-v-one-time").value, court:document.getElementById("one-v-one-court").value
+  })}),"Ο αγώνας 1v1 δημιουργήθηκε.");
+});
 document.getElementById("score-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const form = event.currentTarget;
@@ -1064,6 +1053,15 @@ document.addEventListener("click", async (event) => {
     if (button.dataset.action === "simulate-match") {
       openSimulator(button.dataset.matchId);
     }
+
+    if (button.dataset.action === "score-1v1") {
+      const match=state.matches.find(m=>m.id===button.dataset.matchId && isOneVOne(m));
+      if(!match) return;
+      const a=window.prompt("Σκορ για "+match.playerA,"0"), b=window.prompt("Σκορ για "+match.playerB,"0");
+      if(a===null || b===null) return;
+      state=normalizeState(await api("one-v-one-score",{method:"POST",body:JSON.stringify({matchId:match.id,scoreA:a,scoreB:b})}));
+      render(); showToast("Το σκορ του 1v1 αποθηκεύτηκε.");
+    }
   } catch (error) {
     showToast(error.message);
   }
@@ -1101,27 +1099,7 @@ function applySearchFilter(){
   document.querySelectorAll("#matches-body tr").forEach(el=>el.hidden=!!q && !el.textContent.toLocaleLowerCase("el-GR").includes(q));
   document.querySelectorAll("#messages > li").forEach(el=>el.hidden=!!q && !el.textContent.toLocaleLowerCase("el-GR").includes(q));
 }
-document.getElementById("export-data")?.addEventListener("click", exportState);\ndocument.getElementById("stat-team")?.addEventListener("change",()=>renderIntelligence());
-document.getElementById("stats-form")?.addEventListener("submit",async e=>{
-  e.preventDefault();
-  const form=e.currentTarget;
-  setBusy(form,true);
-  try {
-    state=normalizeState(await api("stats",{method:"POST",body:JSON.stringify({
-      matchId:document.getElementById("stat-match").value,
-      team:document.getElementById("stat-team").value,
-      player:document.getElementById("stat-player").value,
-      points:document.getElementById("stat-points").value,
-      rebounds:document.getElementById("stat-rebounds").value,
-      assists:document.getElementById("stat-assists").value,
-      steals:document.getElementById("stat-steals").value,
-      blocks:document.getElementById("stat-blocks").value,
-      turnovers:document.getElementById("stat-turnovers").value
-    })}));
-    render(); form.reset(); renderIntelligence(); showToast("Τα player stats αποθηκεύτηκαν.");
-  } catch(err){showToast(err.message)} finally{setBusy(form,false)}
-});
-
+document.getElementById("export-data")?.addEventListener("click", exportState);\n
 document.getElementById("theme-toggle")?.addEventListener("click",()=>document.body.classList.toggle("light-theme"));
 document.getElementById("global-search")?.addEventListener("input",e=>{searchQuery=e.target.value;applySearchFilter();});
 document.getElementById("focus-next")?.addEventListener("click",()=>document.getElementById("matches")?.scrollIntoView({behavior:"smooth",block:"start"}));

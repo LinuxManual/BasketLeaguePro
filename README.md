@@ -57,17 +57,7 @@ If UI updates do not appear after deploy, hard refresh the page or clear cache o
 
 Version 7 turns the dashboard into a lightweight basketball operations system.
 
-### Player Intelligence
-- Per-game player box scores: points, rebounds, assists, steals, blocks and turnovers.
-- Persistent player-stat records stored alongside league state.
-- Automatic Player Impact leaderboard with an efficiency-style impact calculation.
-- Team-aware player selection and match selection.
+### Score-only αγώνες ομάδων και ξεχωριστοί αγώνες 1v1.
 
-### Operations & UX
-- Command Center with next tip-off, countdown, form and scoring trend.
-- Global search, JSON backup export and browser notifications.
-- Light/dark theme.
-- Responsive Basketball OS layout.
-- Service-worker cache versioned for the v7 assets.
-
-The architecture remains local-first and Firebase-compatible, so the new player analytics data participates in the same state synchronization model.
+- Στους κανονικούς αγώνες καταχωρείται μόνο το τελικό σκορ.
+- Οι αγώνες 1v1 έχουν ξεχωριστή δημιουργία, λίστα και τελικό σκορ ανά παίκτη.

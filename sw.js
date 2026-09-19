@@ -1,10 +1,10 @@
-const CACHE_NAME = "basketleaguepro-shell-v7";
+const CACHE_NAME = "basketleaguepro-shell-v7-1";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=7.0.0",
-  "./script.js?v=7.0.0",
-  "./firebase-config.js?v=7.0.0",
+  "./styles.css?v=7.1.0",
+  "./script.js?v=7.1.0",
+  "./firebase-config.js?v=7.1.0",
   "./manifest.json",
   "./icon.svg"
 ];

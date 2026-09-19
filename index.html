@@ -6,12 +6,12 @@
     <meta name="theme-color" content="#0a0f1d" />
     <meta name="description" content="BasketLeague Pro premium dashboard for basketball rosters, matches, scores, and team chat." />
     <link rel="manifest" href="./manifest.json" />
-    <title>BasketLeague Pro 7.0.0 — Basketball OS</title>
+    <title>BasketLeague Pro 7.1.0 — Basketball OS</title>
     <!-- Premium Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./styles.css?v=7.0.0" />
+    <link rel="stylesheet" href="./styles.css?v=7.1.0" />
   </head>
   <body class="site-locked">
     <section id="entry-gate" class="entry-gate" aria-labelledby="entry-gate-title">
@@ -59,7 +59,8 @@
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
           Αγώνες
         </a>
-        <a href="#intelligence"><span aria-hidden="true">📊</span> Analytics</a>\n        <a href="#chat">
+        <a href="#one-v-one-matches"><span aria-hidden="true">🥊</span> 1v1</a>
+        <a href="#chat">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
           Chat
         </a>
@@ -204,7 +205,7 @@
           </form>
 
           <form id="match-form" class="stacked-form">
-            <h4 class="form-title">Δημιουργία Αγώνα</h4>
+            <h4 class="form-title">Δημιουργία Αγώνα Ομάδων</h4>
             <div class="form-row">
               <div class="form-group">
                 <label for="date">Ημερομηνία</label>
@@ -223,6 +224,32 @@
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
               Δημιουργία Αγώνα
             </button>
+          </form>
+          <form id="one-v-one-form" class="stacked-form">
+            <h4 class="form-title">Δημιουργία 1v1</h4>
+            <div class="form-group">
+              <label for="one-v-one-player-a">Παίκτης Α</label>
+              <input id="one-v-one-player-a" maxlength="80" required autocomplete="off" placeholder="π.χ. Νίκος" />
+            </div>
+            <div class="form-group">
+              <label for="one-v-one-player-b">Παίκτης Β</label>
+              <input id="one-v-one-player-b" maxlength="80" required autocomplete="off" placeholder="π.χ. Γιάννης" />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="one-v-one-date">Ημερομηνία</label>
+                <input type="date" id="one-v-one-date" required />
+              </div>
+              <div class="form-group">
+                <label for="one-v-one-time">Ώρα</label>
+                <input type="time" id="one-v-one-time" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="one-v-one-court">Γήπεδο</label>
+              <input id="one-v-one-court" maxlength="80" required autocomplete="off" placeholder="π.χ. ΟΑΚΑ" />
+            </div>
+            <button type="submit" class="button-submit">🥊 Δημιουργία 1v1</button>
           </form>
         </article>
       </section>
@@ -275,41 +302,24 @@
         </div>
       </section>
 
-      <section class="intelligence-section" id="intelligence" aria-labelledby="intelligence-title">
+      <section class="schedule-section one-v-one-section" id="one-v-one-matches" aria-labelledby="one-v-one-matches-title">
         <div class="section-heading">
           <div>
-            <p class="section-label">Player Intelligence</p>
-            <h2 id="intelligence-title">Advanced Box Score</h2>
+            <p class="section-label">1v1 Fixtures</p>
+            <h2 id="one-v-one-matches-title">Αγώνες 1v1</h2>
           </div>
-          <span class="pill">V7</span>
         </div>
-        <div class="intelligence-grid">
-          <article class="panel">
-            <div class="panel-heading"><div><p class="section-label">Leaderboard</p><h3>Player Impact</h3></div></div>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th>Παίκτης</th><th>Ομάδα</th><th>GP</th><th>PTS</th><th>REB</th><th>AST</th><th>EFF</th></tr></thead>
-                <tbody id="leaderboard-body"></tbody>
-              </table>
-            </div>
-          </article>
-          <article class="panel">
-            <div class="panel-heading"><div><p class="section-label">Box Score Desk</p><h3>Καταγραφή εμφάνισης</h3></div></div>
-            <form id="stats-form" class="stacked-form">
-              <div class="form-group"><label for="stat-match">Αγώνας</label><select id="stat-match" required></select></div>
-              <div class="form-group"><label for="stat-team">Ομάδα</label><select id="stat-team"><option>HotHeroes</option><option>Ιπτάμενοι</option></select></div>
-              <div class="form-group"><label for="stat-player">Παίκτης</label><select id="stat-player" required></select></div>
-              <div class="stat-input-grid">
-                <label>PTS<input id="stat-points" type="number" min="0" max="99" value="0"></label>
-                <label>REB<input id="stat-rebounds" type="number" min="0" max="99" value="0"></label>
-                <label>AST<input id="stat-assists" type="number" min="0" max="99" value="0"></label>
-                <label>STL<input id="stat-steals" type="number" min="0" max="99" value="0"></label>
-                <label>BLK<input id="stat-blocks" type="number" min="0" max="99" value="0"></label>
-                <label>TOV<input id="stat-turnovers" type="number" min="0" max="99" value="0"></label>
-              </div>
-              <button type="submit" class="button-submit">💾 Αποθήκευση εμφάνισης</button>
-            </form>
-          </article>
+        <div class="panel">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Ημερομηνία</th><th>Ώρα</th><th>Παίκτης Α</th><th>Παίκτης Β</th><th>Σκορ</th><th>Κατάσταση</th><th>Ενέργειες</th>
+                </tr>
+              </thead>
+              <tbody id="one-v-one-matches-body"></tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -490,8 +500,8 @@
         input.focus();
       })();
     </script>
-    <script src="./firebase-config.js?v=7.0.0"></script>
-    <script type="module" src="./script.js?v=7.0.0"></script>
+    <script src="./firebase-config.js?v=7.1.0"></script>
+    <script type="module" src="./script.js?v=7.1.0"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
