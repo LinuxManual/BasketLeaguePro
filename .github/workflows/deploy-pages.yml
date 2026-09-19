@@ -33,6 +33,7 @@ jobs:
           FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
           FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
           FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+          AI_API_URL: ${{ secrets.AI_API_URL }}
         run: |
           mkdir -p _site/data
           cp 404.html index.html script.js styles.css _site/
@@ -52,27 +53,11 @@ jobs:
           const config = Object.fromEntries(required.map(([key, envName]) => [key, process.env[envName]]));
           if (process.env.FIREBASE_MEASUREMENT_ID) config.measurementId = process.env.FIREBASE_MEASUREMENT_ID;
           fs.writeFileSync("_site/firebase-config.js", `globalThis.__FIREBASE_CONFIG__ = ${JSON.stringify(config)};\n`);
+          if (process.env.AI_API_URL) {
+            fs.writeFileSync("_site/ai-config.js", `globalThis.__AI_API_URL__ = ${JSON.stringify(process.env.AI_API_URL)};\n`);
+          }
           NODE
 
-      - name: Deploy Firebase AI function
-        env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-        run: |
-          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
-            echo "Missing GitHub Actions secret: FIREBASE_SERVICE_ACCOUNT"
-            exit 1
-          fi
-          if [ -z "$GEMINI_API_KEY" ]; then
-            echo "Missing GitHub Actions secret: GEMINI_API_KEY"
-            exit 1
-          fi
-          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
-          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-service-account.json"
-          printf '%s' "$GEMINI_API_KEY" > "$RUNNER_TEMP/gemini-api-key.txt"
-          npx --yes firebase-tools@latest functions:secrets:set GEMINI_API_KEY --data-file "$RUNNER_TEMP/gemini-api-key.txt" --project "$FIREBASE_PROJECT_ID"
-          npx --yes firebase-tools@latest deploy --only functions:aiChat --project "$FIREBASE_PROJECT_ID"
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
