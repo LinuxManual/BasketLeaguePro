@@ -1137,8 +1137,7 @@ async function sendAiMessage(message) {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data?.error?.message || "Το Gemini API επέστρεψε σφάλμα.");
-    const answer = String(data?.candidates?.[0]?.content?.parts?.filter(p => typeof p?.text === "string").map(p => p.text).join("
-") || "").trim();
+    const answer = String(data?.candidates?.[0]?.content?.parts?.filter(p => typeof p?.text === "string").map(p => p.text).join("\n") || "").trim();
     if (!answer) throw new Error("Δεν επιστράφηκε απάντηση από το Gemini.");
     aiHistory.push({ role: "assistant", text: answer });
     appendAiMessage("assistant", answer);
