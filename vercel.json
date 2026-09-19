@@ -1,8 +1,0 @@
-{
-  "version": 2,
-  "functions": {
-    "api/ai-chat.js": {
-      "maxDuration": 30
-    }
-  }
-}
