@@ -924,7 +924,7 @@ async function saveSimScore() {
 }
 
 // Event Listeners for Forms
-document.getElementById("player-form").addEventListener("submit", (event) => {
+document.getElementById("player-form")?.addEventListener("submit", (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   const numberVal = parseInt(document.getElementById("player-number").value, 10);
@@ -949,7 +949,7 @@ document.getElementById("player-form").addEventListener("submit", (event) => {
   );
 });
 
-document.getElementById("match-form").addEventListener("submit", (event) => {
+document.getElementById("match-form")?.addEventListener("submit", (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   handleSubmit(
@@ -974,7 +974,7 @@ document.getElementById("one-v-one-form")?.addEventListener("submit", (event) =>
     date:document.getElementById("one-v-one-date").value, time:document.getElementById("one-v-one-time").value, court:document.getElementById("one-v-one-court").value
   })}),"Ο αγώνας 1v1 δημιουργήθηκε.");
 });
-document.getElementById("score-form").addEventListener("submit", (event) => {
+document.getElementById("score-form")?.addEventListener("submit", (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   handleSubmit(
@@ -992,7 +992,7 @@ document.getElementById("score-form").addEventListener("submit", (event) => {
   );
 });
 
-document.getElementById("chat-form").addEventListener("submit", (event) => {
+document.getElementById("chat-form")?.addEventListener("submit", (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   handleSubmit(
@@ -1012,7 +1012,7 @@ document.getElementById("chat-form").addEventListener("submit", (event) => {
 // Emojis Quick Click Injections
 setupEmojis();
 
-document.getElementById("clear-chat").addEventListener("click", async () => {
+document.getElementById("clear-chat")?.addEventListener("click", async () => {
   try {
     state = normalizeState(await api("chat", { method: "DELETE" }));
     render();
@@ -1076,7 +1076,7 @@ document.addEventListener("click", async (event) => {
 });
 
 // Simulator Modal Actions
-els.startSimBtn.addEventListener("click", () => {
+els.startSimBtn?.addEventListener("click", () => {
   if (els.startSimBtn.textContent === "Αποθήκευση Σκορ") {
     saveSimScore();
   } else {
@@ -1084,15 +1084,15 @@ els.startSimBtn.addEventListener("click", () => {
   }
 });
 
-els.cancelSimBtn.addEventListener("click", () => {
+els.cancelSimBtn?.addEventListener("click", () => {
   closeSimulator();
 });
 
-els.closeSimBtn.addEventListener("click", () => {
+els.closeSimBtn?.addEventListener("click", () => {
   closeSimulator();
 });
 
-els.refresh.addEventListener("click", () => refresh());
+els.refresh?.addEventListener("click", () => refresh());
 
 
 const aiHistory = [];
@@ -1162,6 +1162,7 @@ els.aiClear?.addEventListener("click",()=>{
 render();
 refresh(true);
 enableCloudSync();
+window.__BASKET_APP_BOOTED__ = true;
 window.setInterval(() => refresh(true), 5000);
 
 
