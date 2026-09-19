@@ -1022,7 +1022,7 @@ document.getElementById("clear-chat").addEventListener("click", async () => {
   }
 });
 
-document.querySelector(".segmented").addEventListener("click", (event) => {
+document.querySelector(".segmented")?.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-filter]");
   if (!button) return;
   activeFilter = button.dataset.filter;
