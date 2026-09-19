@@ -517,12 +517,14 @@
         input.focus();
       })();
     </script>
-    <script src="./firebase-config.js?v=9.0.0"></script>
-    <script src="./ai-config.js?v=10.0.0"></script>
-    <script type="module" src="./script.js?v=10.0.0"></script>
+    <script src="./firebase-config.js?v=11.0.0"></script>
+    <script src="./ai-config.js?v=11.0.0"></script>
+    <script type="module" src="./script.js?v=11.0.0"></script>
     <script>
       if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          registrations.forEach((registration) => registration.unregister());
+        }).catch(() => {});
       }
     </script>
   </body>
