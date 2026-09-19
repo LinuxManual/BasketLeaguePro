@@ -5,7 +5,7 @@ const TEAMS = [TEAM_HOT, TEAM_FLY];
 const STORAGE_KEY = "basketleaguepro:v5";
 const USE_STATIC_STORE = location.hostname.endsWith("github.io");
 const CLOUD_DOC_PATH = ["leagues", "basketleaguepro", "state", "live"];
-const AI_API_URL = location.hostname.endsWith("github.io") ? String(globalThis.__AI_API_URL__ || "").trim() : "/api/ai-chat";
+const AI_API_URL = location.hostname.endsWith("github.io")\n  ? "https://europe-west1-basket-clash-7901.cloudfunctions.net/aiChat"\n  : "/api/ai-chat";
 
 let cloudReady = false;
 let cloudSyncBusy = false;
