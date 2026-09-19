@@ -5,6 +5,7 @@ const TEAMS = [TEAM_HOT, TEAM_FLY];
 const STORAGE_KEY = "basketleaguepro:v5";
 const USE_STATIC_STORE = location.hostname.endsWith("github.io");
 const CLOUD_DOC_PATH = ["leagues", "basketleaguepro", "state", "live"];
+const AI_API_URL = location.hostname.endsWith("github.io") ? String(globalThis.__AI_API_URL__ || "").trim() : "/api/ai-chat";
 
 let cloudReady = false;
 let cloudSyncBusy = false;
@@ -1106,7 +1107,8 @@ async function sendAiMessage(message) {
   aiBusy=true; appendAiMessage("user",textValue); aiHistory.push({role:"user",text:textValue});
   els.aiChatInput.value=""; els.aiChatInput.disabled=true; els.aiChatStatus.textContent="Το AI γράφει…";
   try {
-    const response=await fetch("/api/ai-chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:aiHistory.slice(-12)})});
+    if(!AI_API_URL) throw new Error("Το AI endpoint δεν έχει ρυθμιστεί. Χρησιμοποίησε το Vercel deployment του project.");
+    const response=await fetch(AI_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:aiHistory.slice(-12)})});
     const data=await response.json().catch(()=>({}));
     if(!response.ok) throw new Error(data.error||"Το AI δεν είναι διαθέσιμο αυτή τη στιγμή.");
     const answer=String(data.text||"").trim(); if(!answer) throw new Error("Δεν επιστράφηκε απάντηση από το AI.");
