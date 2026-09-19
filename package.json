@@ -1,8 +1,8 @@
 {
   "name": "basketleaguepro",
-  "version": "7.1.0",
+  "version": "8.0.0",
   "private": true,
-  "description": "BasketLeaguePro Basketball OS — score-only team games and separate 1v1 fixtures",
+  "description": "BasketLeaguePro Basketball OS — score-only team games, separate 1v1 fixtures, and Gemini AI chatbot",
   "type": "commonjs",
   "engines": {
     "node": ">=20"

@@ -1376,3 +1376,6 @@ body:not(.site-locked) .entry-gate { display: none; }
 .intelligence-section tbody tr:hover{background:rgba(255,255,255,.04);transform:translateX(2px)}
 @media(max-width:1000px){.intelligence-grid{grid-template-columns:1fr}}
 @media(max-width:560px){.stat-input-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* v8 AI Chat */
+.ai-chat-section{margin:2rem 0 4rem}.ai-chat-panel{padding:0;overflow:hidden}.ai-messages{min-height:260px;max-height:520px;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:.8rem}.ai-message{display:flex;flex-direction:column;gap:.25rem;max-width:min(85%,760px);padding:.8rem 1rem;border-radius:16px;line-height:1.55;white-space:pre-wrap}.ai-message strong{font-size:.75rem;opacity:.7;text-transform:uppercase;letter-spacing:.06em}.ai-message-bot{align-self:flex-start;background:rgba(255,255,255,.06)}.ai-message-user{align-self:flex-end;background:rgba(80,140,255,.18)}.ai-chat-form{display:grid;grid-template-columns:1fr auto;gap:.75rem;padding:1rem;border-top:1px solid rgba(255,255,255,.08)}.ai-chat-form input{min-width:0}.ai-chat-status{padding:0 1rem 1rem;margin:0;font-size:.8rem}@media(max-width:700px){.ai-chat-form{grid-template-columns:1fr}.ai-message{max-width:94%}}

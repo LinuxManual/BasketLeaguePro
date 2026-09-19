@@ -25,6 +25,11 @@ const els = {
   messages: document.getElementById("messages"),
   toast: document.getElementById("toast"),
   refresh: document.getElementById("refresh"),
+  aiMessages: document.getElementById("ai-messages"),
+  aiChatForm: document.getElementById("ai-chat-form"),
+  aiChatInput: document.getElementById("ai-chat-input"),
+  aiChatStatus: document.getElementById("ai-chat-status"),
+  aiClear: document.getElementById("ai-clear"),
 
   // Simulator Elements
   simModal: document.getElementById("simulator-modal"),
@@ -1086,6 +1091,36 @@ els.closeSimBtn.addEventListener("click", () => {
 
 els.refresh.addEventListener("click", () => refresh());
 
+
+const aiHistory = [];
+let aiBusy = false;
+function appendAiMessage(role, message) {
+  if (!els.aiMessages) return;
+  const item = createNode("div", { className: "ai-message " + (role === "user" ? "ai-message-user" : "ai-message-bot") });
+  item.append(createNode("strong", { text: role === "user" ? "Εσύ" : "BasketLeague AI" }), createNode("span", { text: message }));
+  els.aiMessages.appendChild(item); els.aiMessages.scrollTop = els.aiMessages.scrollHeight;
+}
+async function sendAiMessage(message) {
+  if (aiBusy) return;
+  const textValue = String(message || "").trim(); if (!textValue) return;
+  aiBusy=true; appendAiMessage("user",textValue); aiHistory.push({role:"user",text:textValue});
+  els.aiChatInput.value=""; els.aiChatInput.disabled=true; els.aiChatStatus.textContent="Το AI γράφει…";
+  try {
+    const response=await fetch("/api/ai-chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:aiHistory.slice(-12)})});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok) throw new Error(data.error||"Το AI δεν είναι διαθέσιμο αυτή τη στιγμή.");
+    const answer=String(data.text||"").trim(); if(!answer) throw new Error("Δεν επιστράφηκε απάντηση από το AI.");
+    aiHistory.push({role:"assistant",text:answer}); appendAiMessage("assistant",answer); els.aiChatStatus.textContent="Gemini AI • έτοιμο";
+  } catch(error) {
+    aiHistory.pop(); appendAiMessage("assistant","⚠️ "+error.message); els.aiChatStatus.textContent="Το AI χρειάζεται ρύθμιση στον server (GEMINI_API_KEY).";
+  } finally { aiBusy=false; els.aiChatInput.disabled=false; els.aiChatInput.focus(); }
+}
+els.aiChatForm?.addEventListener("submit",(event)=>{event.preventDefault();sendAiMessage(els.aiChatInput.value);});
+els.aiClear?.addEventListener("click",()=>{
+  aiHistory.length=0;
+  els.aiMessages.replaceChildren(createNode("div",{className:"ai-message ai-message-bot"},[createNode("strong",{text:"BasketLeague AI"}),createNode("span",{text:"Η συνομιλία καθαρίστηκε. Ρώτησέ με ό,τι θέλεις."})]));
+  els.aiChatStatus.textContent="Gemini AI • έτοιμο";
+});
 // Initialization
 render();
 refresh(true);
