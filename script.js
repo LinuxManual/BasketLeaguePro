@@ -1106,14 +1106,22 @@ async function sendAiMessage(message) {
   aiBusy=true; appendAiMessage("user",textValue); aiHistory.push({role:"user",text:textValue});
   els.aiChatInput.value=""; els.aiChatInput.disabled=true; els.aiChatStatus.textContent="Το AI γράφει…";
   try {
-    if(!AI_API_URL) throw new Error("Το AI endpoint δεν έχει ρυθμιστεί. Χρησιμοποίησε το Firebase deployment του project.");
-    const response=await fetch(AI_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:aiHistory.slice(-12)})});
+    if(!GEMINI_API_KEY) throw new Error("Το Gemini API key δεν έχει ρυθμιστεί.");
+    const contents = aiHistory.slice(-12).map(item => ({
+      role: item.role === "assistant" ? "model" : "user",
+      parts: [{ text: String(item.text || "").trim().slice(0, 4000) }]
+    }));
+    const response=await fetch(GEMINI_API_URL,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":GEMINI_API_KEY},body:JSON.stringify({
+      systemInstruction:{parts:[{text:"You are BasketLeague AI, the public assistant inside BasketLeaguePro. Answer clearly and helpfully. You can discuss general topics, basketball, technology, coding, science, and everyday questions. Do not claim access to live data unless it is provided. Prefer Greek when the user writes Greek."}]},
+      contents,
+      generationConfig:{maxOutputTokens:1200,thinkingConfig:{thinkingLevel:"medium"}}
+    })});
     const data=await response.json().catch(()=>({}));
     if(!response.ok) throw new Error(data.error||"Το AI δεν είναι διαθέσιμο αυτή τη στιγμή.");
     const answer=String(data.text||"").trim(); if(!answer) throw new Error("Δεν επιστράφηκε απάντηση από το AI.");
     aiHistory.push({role:"assistant",text:answer}); appendAiMessage("assistant",answer); els.aiChatStatus.textContent="Gemini AI • έτοιμο";
   } catch(error) {
-    aiHistory.pop(); appendAiMessage("assistant","⚠️ "+error.message); els.aiChatStatus.textContent="Το AI χρειάζεται ρύθμιση στον server (GEMINI_API_KEY).";
+    aiHistory.pop(); appendAiMessage("assistant","⚠️ "+error.message); els.aiChatStatus.textContent="Το Gemini χρειάζεται ρύθμιση (GEMINI_API_KEY).";
   } finally { aiBusy=false; els.aiChatInput.disabled=false; els.aiChatInput.focus(); }
 }
 els.aiChatForm?.addEventListener("submit",(event)=>{event.preventDefault();sendAiMessage(els.aiChatInput.value);});
