@@ -70,3 +70,8 @@ Version 7 turns the dashboard into a lightweight basketball operations system.
 - Configure `GEMINI_API_KEY` on the Node server. Optionally set `GEMINI_MODEL`; default: `gemini-flash-latest`.
 - **Important:** GitHub Pages is static and cannot execute `server.js`; the AI endpoint requires a Node-capable deployment/proxy.
 - 1v1 score entry is already present via **Καταχώρηση σκορ** and `POST /api/one-v-one-score`.
+
+
+## Live AI deployment
+
+The public AI chatbot uses the server-side `api/ai-chat.js` endpoint when deployed on Vercel. Configure `GEMINI_API_KEY` and optionally `GEMINI_MODEL` as Vercel environment variables; never place the key in browser code or Git. GitHub Pages cannot execute this API route, so the AI endpoint must be deployed on a Node/serverless host.
