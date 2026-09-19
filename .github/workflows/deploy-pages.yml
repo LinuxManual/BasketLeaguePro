@@ -70,7 +70,8 @@ jobs:
           fi
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-service-account.json"
-          npx --yes firebase-tools@latest functions:secrets:set GEMINI_API_KEY --data "$GEMINI_API_KEY" --project "$FIREBASE_PROJECT_ID"
+          printf '%s' "$GEMINI_API_KEY" > "$RUNNER_TEMP/gemini-api-key.txt"
+          npx --yes firebase-tools@latest functions:secrets:set GEMINI_API_KEY --data-file "$RUNNER_TEMP/gemini-api-key.txt" --project "$FIREBASE_PROJECT_ID"
           npx --yes firebase-tools@latest deploy --only functions:aiChat --project "$FIREBASE_PROJECT_ID"
       - name: Configure Pages
         uses: actions/configure-pages@v5
