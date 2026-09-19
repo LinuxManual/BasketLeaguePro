@@ -410,7 +410,7 @@ function localApi(path, options = {}) {
     return Promise.resolve(writeLocalStore(store));
   }
 
-  if (path === "health" && method === "GET") return Promise.resolve({ ok: true, version: "5.0.0", mode: "static" });
+  if (path === "health" && method === "GET") return Promise.resolve({ ok: true, version: "7.0.0", mode: "static" });
   throw new Error("Method or endpoint not allowed");
 }
 
