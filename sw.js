@@ -1,8 +1,8 @@
-const CACHE_NAME = "basketleaguepro-pwa-v13";
+const CACHE_NAME = "basketleaguepro-pwa-v15";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=9.0.0",
+  "./styles.css?v=15.0.0",
   "./script.js?v=12.0.0",
   "./manifest.json",
   "./icon.svg",
